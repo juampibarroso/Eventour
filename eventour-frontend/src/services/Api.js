@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/events"; // Ajusta la URL según el backend
+const API_URL = "http://localhost:8080/api/eventos"; // Ajusta la URL según el backend
 
 export async function getEvents() {
   const response = await fetch(API_URL);
