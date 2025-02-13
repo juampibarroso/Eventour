@@ -5,6 +5,7 @@ import CreateEvent from "./pages/CreateEvent";
 function App() {
   return (
     <div>
+
       <nav>
         <Link to="/">Inicio</Link>
         <Link to="/create-event">Crear Evento</Link>
@@ -14,7 +15,11 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/create-event" element={<CreateEvent />} />
       </Routes>
+
+      
     </div>
+
+    
   );
 }
 

@@ -8,7 +8,7 @@ function EventForm() {
     fechaInicio: "",
     fechaFin: "",
     precio: "",
-    imagen: "",
+    imagen: null,
     estado: "ACTIVO", // Estado predeterminado
     destacado: false, // Opción por defecto
     ubicacionId: "", // Este campo es obligatorio en el backend
