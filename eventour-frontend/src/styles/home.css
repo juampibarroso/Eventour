@@ -1,29 +1,70 @@
+/* Home.css */
+
+/* Contenedor principal */
 .home-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    text-align: center;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
-    color: white;
-  }
-  
-  h1 {
-    margin-bottom: 20px;
-  }
-  
-  .grid-container {
-    display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #f7fafc;
+  padding: 2rem;
+}
+
+/* Título */
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-align: center;
+  color: #6b46c1; /* Violeta */
+  margin-bottom: 2rem;
+}
+
+/* Contenedor de los enlaces */
+.links-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 800px;
+}
+
+@media (min-width: 768px) {
+  .links-container {
     grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    width: 80%;
-    max-width: 600px;
   }
-  
-  @media (max-width: 600px) {
-    .grid-container {
-      grid-template-columns: 1fr;
-    }
-  }
-  
+}
+
+/* Estilo de cada enlace */
+.link-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-color: #6b46c1; /* Violeta */
+  color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  transition: all 0.3s ease-in-out;
+  flex-direction: column;
+}
+
+/* Efecto hover */
+.link-card:hover {
+  background-color: #5a35b1; /* Violeta oscuro */
+  transform: scale(1.05);
+}
+
+/* Estilo de los títulos dentro de los enlaces */
+.link-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Estilo de los iconos */
+.icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
