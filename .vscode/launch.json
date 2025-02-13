@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-EventourApplication<Eventour>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.eventour.eventour.EventourApplication",
+            "projectName": "Eventour",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

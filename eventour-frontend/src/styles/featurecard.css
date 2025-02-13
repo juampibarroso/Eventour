@@ -1,0 +1,28 @@
+.feature-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    background: #9400D3; /* Violeta vibrante */
+    border-radius: 10px;
+    text-decoration: none;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.3s;
+    box-shadow: 3px 3px 15px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+  
+  .feature-card:hover {
+    transform: scale(1.05);
+    box-shadow: 3px 3px 20px rgba(0, 0, 0, 0.5);
+  }
+  
+  @media (max-width: 600px) {
+    .feature-card {
+      height: 120px;
+      font-size: 1rem;
+    }
+  }
+  
