@@ -5,15 +5,15 @@ import BusquedaUbicacion from './pages/BusquedaUbicacion';
 import BusquedaCategoria from './pages/BusquedaCategoria';
 import BusquedaFecha from './pages/BusquedaFecha';
 import EventosDestacados from './pages/EventosDestacados';
+import EventListPage from "./pages/EventListPage"; // Nueva página de eventos
 
 function App() {
   return (
-    
-    <div>
-
-      <nav>
+    <div className="app-container">
+      <nav className="nav-bar">
         <Link to="/">Inicio</Link>
         <Link to="/create-event">Crear Evento</Link>
+        <Link to="/events">Ver Todos los Eventos</Link> {/* Nuevo enlace */}
       </nav>
 
       <Routes>
@@ -23,16 +23,9 @@ function App() {
         <Route path="/busqueda-categoria" element={<BusquedaCategoria />} />
         <Route path="/busqueda-fecha" element={<BusquedaFecha />} />
         <Route path="/eventos-destacados" element={<EventosDestacados />} />
-      
-      
-      
-      
+        <Route path="/events" element={<EventListPage />} /> {/* Nueva ruta */}
       </Routes>
-
-      
     </div>
-
-    
   );
 }
 
