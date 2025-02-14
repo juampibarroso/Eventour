@@ -1,29 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap');
+
+body {
+  background-color: #ffffff; /* Fondo blanco */
+  color: #822087; /* Violeta oscuro */
+  font-family: 'Montserrat', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* ======== Espaciado entre Nav-bar y Banner ======== */
+.nav-bar {
+  margin-bottom: 20px;
+}
+
+/* ======== Contenedor del Banner ======== */
+.banner-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background: url('../assets/banner.jpg') no-repeat center center/cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px; /* Separación de la nav-bar */
+}
+
+/* ======== Texto debajo del Banner ======== */
+.banner-text {
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #822087; /* Violeta brillante */
+  margin-top: 30px; /* Espaciado adicional */
+  letter-spacing: 1px;
+}
+
+/* ======== Contenedor Principal ======== */
 .home-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    text-align: center;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
-    color: white;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ======== Contenedor de los Enlaces ======== */
+.links-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 900px;
+  margin-top: 30px; /* Más espacio con el texto */
+}
+
+/* ======== Tarjetas de Búsqueda con Íconos ======== */
+.link-card {
+  width: 300px; /* Cuadrado */
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #822087; /* Violeta brillante */
+  color: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  font-weight: 500;
+}
+
+.link-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  background-color: #560d8a; /* Púrpura más oscuro */
+}
+
+/* ======== Estilo de los Títulos dentro de las Tarjetas ======== */
+.link-title {
+  font-size: 1.7rem;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* ======== Íconos en las Tarjetas ======== */
+.icon {
+  font-size: 4.5rem;
+  margin-bottom: 1rem;
+  color: #FFD700; /* Amarillo brillante */
+}
+
+/* ======== Botón "Ver Todos los Eventos" ======== */
+.event-button-container {
   
-  h1 {
-    margin-bottom: 20px;
-  }
-  
-  .grid-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    width: 80%;
-    max-width: 600px;
-  }
-  
-  @media (max-width: 600px) {
-    .grid-container {
-      grid-template-columns: 1fr;
-    }
-  }
-  
+  text-align: center;
+  margin-top: 60px;
+}
+
+.view-events-button {
+  background-color: #0e0713; /* Violeta más potente */
+  color: white;
+  padding: 18px 30px;
+  font-size: 20px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.view-events-button:hover {
+  background-color: #4B0082; /* Violeta oscuro */
+  transform: scale(1.07);
+}
