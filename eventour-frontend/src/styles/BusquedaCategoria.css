@@ -1,0 +1,98 @@
+/* Estilos Generales */
+.busqueda-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #f4f4f4;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  /* Títulos y texto */
+  .titulo {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .descripcion {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  
+  .subtitulo {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 15px;
+  }
+  
+  /* Select */
+  .select-categoria {
+    padding: 12px;
+    font-size: 1rem;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    background-color: white;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+  }
+  
+  .select-categoria:focus {
+    border-color: #007bff;
+    box-shadow: 2px 2px 12px rgba(0, 123, 255, 0.3);
+  }
+  
+  /* Contenedor de eventos */
+  .eventos-container {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  /* Tarjetas de eventos */
+  .eventos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .evento-card {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: left;
+  }
+  
+  .evento-titulo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #222;
+  }
+  
+  .evento-descripcion {
+    font-size: 1rem;
+    color: #555;
+    margin: 8px 0;
+  }
+  
+  .evento-fecha {
+    font-size: 0.9rem;
+    color: #777;
+    font-style: italic;
+  }
+  
+  /* Mensaje de No Eventos */
+  .no-eventos {
+    font-size: 1.2rem;
+    color: #888;
+    margin-top: 10px;
+  }
+  
