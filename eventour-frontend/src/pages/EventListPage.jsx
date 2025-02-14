@@ -27,7 +27,7 @@ const EventListPage = () => {
               <p>{event.descripcion}</p>
               <p><strong>Fecha:</strong> {new Date(event.fechaInicio).toLocaleDateString()}</p>
               <p><strong>Estado:</strong> {event.estado}</p>
-              <p><strong>Categoría:</strong> {event.categoria}</p>
+              <p><strong>Categoría:</strong> {event.categoriaEvento}</p>
             
               <p><strong>Ubicación:</strong> {event.ubicacion}</p>
             </li>
