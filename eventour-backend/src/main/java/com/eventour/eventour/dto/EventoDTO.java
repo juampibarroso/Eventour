@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record EventoDTO(
-        Long id,
+        long id,
         String titulo,
         String descripcion,
         LocalDate fechaInicio,

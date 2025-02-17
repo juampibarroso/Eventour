@@ -144,7 +144,7 @@ public class EventoService {
                 evento.getPrecio(),
                 evento.getImagen(),
                 evento.getEstado(),
-                evento.getUbicacion().getId(),
+                Long.valueOf(evento.getUbicacion().getId()),
                 evento.getCategoria(),
                 evento.isDestacado()
         );
