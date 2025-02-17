@@ -144,9 +144,26 @@ public class EventoService {
                 evento.getPrecio(),
                 evento.getImagen(),
                 evento.getEstado(),
-                evento.getUbicacion().getId(),
+                Long.valueOf(evento.getUbicacion().getId()),
                 evento.getCategoria(),
                 evento.isDestacado()
         );
     }
+
+    public EventoDTO obtenerEventoPorIdDTO(Long id) {
+        Evento evento = eventoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Evento no encontrado con ID: " + id));
+        return mapToDTO(evento);
+    }
+
+    // Filtrar eventos con DTO
+    public List<EventoDTO> filtrarEventosDTO(String categoria, LocalDate fechaInicio, LocalDate fechaFin, Long ubicacionId) {
+        List<Evento> eventos = eventoRepository.findByFiltros(categoria, fechaInicio, fechaFin, ubicacionId);
+        return eventos.stream().map(this::mapToDTO).toList();
+    }
+
+    public List<Evento> buscarEventosEntreFechas(LocalDate fechaInicio, LocalDate fechaFin) {
+        return eventoRepository.findByFechaInicioBetween(fechaInicio, fechaFin);
+    }
 }
+
