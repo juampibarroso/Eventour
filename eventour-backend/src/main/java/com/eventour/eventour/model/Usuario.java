@@ -1,19 +1,27 @@
 package com.eventour.eventour.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.util.Set;
 
 @Entity
-@Table(name = "usuarios")
+@Table(name = "usuarios",uniqueConstraints = {
+        @UniqueConstraint(columnNames = "username")
+})
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     @Column(nullable = false, unique = true)
     private String username;
 
+    @NotBlank
+    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
     @Column(nullable = false)
     private String password;
 
