@@ -6,6 +6,11 @@ import com.eventour.eventour.model.Usuario;
 import com.eventour.eventour.repository.RolRepository;
 import com.eventour.eventour.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -15,14 +20,41 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 @Service
-public class UsuarioService {
+public class UsuarioService  implements UserDetailsService {
+
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Autowired
     private RolRepository rolRepository;
 
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@(.+)$";
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(username);
+
+        if (usuarioOptional.isEmpty()) {
+            throw new UsernameNotFoundException("Usuario no encontrado: " + username);
+        }
+
+        Usuario usuario = usuarioOptional.get();
+
+        return User.builder()
+                .username(usuario.getUsername())
+                .password(usuario.getPassword()) // Aquí la contraseña ya debería estar encriptada
+                .roles(usuario.getRoles().stream()
+                        .findFirst()
+                        .map(rol -> rol.getNombre().name())
+                        .orElse("USER"))
+                .build();
+    }
 
     public List<Usuario> obtenerTodos() {
         return usuarioRepository.findAll();
@@ -37,6 +69,7 @@ public class UsuarioService {
     }
 
     public Usuario guardar(Usuario usuario) {
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         return usuarioRepository.save(usuario);
     }
 
