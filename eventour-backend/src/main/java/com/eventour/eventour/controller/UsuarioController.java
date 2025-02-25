@@ -4,6 +4,7 @@ import com.eventour.eventour.dto.UsuarioDTO;
 import com.eventour.eventour.model.NombreRol;
 import com.eventour.eventour.model.Rol;
 import com.eventour.eventour.model.Usuario;
+import com.eventour.eventour.repository.UsuarioRepository;
 import com.eventour.eventour.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,9 @@ public class UsuarioController {
 
 @Autowired
     private UsuarioService usuarioService;
+
+@Autowired
+private UsuarioRepository usuarioRepository;
 
 @GetMapping
     public List<UsuarioDTO> obtenerTodos(){
@@ -66,6 +70,38 @@ public class UsuarioController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    public Usuario actualizarUsuario(Long id, UsuarioDTO usuarioDTO, String adminUsername) {
+        // Verificar si el admin que hace la petición existe y tiene rol ADMIN
+        Usuario admin = usuarioRepository.findByUsername(adminUsername)
+                .orElseThrow(() -> new RuntimeException("Error: El usuario administrador no existe."));
+
+        boolean esAdmin = admin.getRoles().stream()
+                .anyMatch(rol -> rol.getNombre().equals(NombreRol.ADMIN));
+
+        if (!esAdmin) {
+            throw new RuntimeException("Error: Solo un administrador puede actualizar usuarios.");
+        }
+
+        // Verificar si el usuario a actualizar existe
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Error: Usuario no encontrado."));
+
+        // Actualizar los datos (si el DTO tiene valores nuevos)
+        if (usuarioDTO.username() != null && !usuarioDTO.username().isBlank()) {
+            usuario.setUsername(usuarioDTO.username());
+        }
+
+        if (usuarioDTO.password() != null && !usuarioDTO.password().isBlank()) {
+            usuario.setPassword(usuarioDTO.password()); // Encriptar antes en producción
+        }
+
+        // No permitir modificar roles directamente por seguridad
+        usuarioRepository.save(usuario);
+
+        return usuario;
+    }
+
 
 
     private UsuarioDTO convertirADTO(Usuario usuario) {
