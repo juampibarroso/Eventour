@@ -13,47 +13,48 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
 public class UsuarioService  implements UserDetailsService {
 
-    private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
-        this.usuarioRepository = usuarioRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private  final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private RolRepository rolRepository;
+    private final RolRepository rolRepository;
+
+    private  final PasswordEncoder passwordEncoder;
+
+
+
 
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@(.+)$";
 
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, RolRepository rolRepository) {
+        this.usuarioRepository = usuarioRepository;
+        this.rolRepository = rolRepository;
+        this.passwordEncoder = passwordEncoder; // ✅ Se inyecta en el constructor, eliminando dependencias circulares
+
+    }
+
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(username);
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
-        if (usuarioOptional.isEmpty()) {
-            throw new UsernameNotFoundException("Usuario no encontrado: " + username);
-        }
+        String[] roles = usuario.getRoles().stream()
+                .map(rol -> rol.getNombre().name())
+                .toArray(String[]::new); // ✅ Se obtiene correctamente la lista de roles del usuario
 
-        Usuario usuario = usuarioOptional.get();
 
         return User.builder()
                 .username(usuario.getUsername())
-                .password(usuario.getPassword()) // Aquí la contraseña ya debería estar encriptada
-                .roles(usuario.getRoles().stream()
-                        .findFirst()
-                        .map(rol -> rol.getNombre().name())
-                        .orElse("USER"))
+                .password(usuario.getPassword())
+                .roles(roles)
                 .build();
+
     }
 
     public List<Usuario> obtenerTodos() {
@@ -78,27 +79,26 @@ public class UsuarioService  implements UserDetailsService {
     }
 
     //Crea un user con Rol de USER por defecto
-    public Usuario crearUsuario(String email, String password) {
+    public Usuario crearUsuario(String username, String password) {
 
-        if (!esEmailValido(email)) {
+        if (!esEmailValido(username)) {
             throw new RuntimeException("Error: El email ingresado no es válido.");
         }
 
-        if (usuarioRepository.findByUsername(email).isPresent()) {
+        if (usuarioRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Error: El email ya está registrado.");
         }
 
         Usuario usuario = new Usuario();
-        usuario.setUsername(email);
-        usuario.setPassword(password); // Recuerda encriptar la contraseña en producción
+        usuario.setUsername(username);
+        usuario.setPassword(passwordEncoder.encode(password)); // Recuerda encriptar la contraseña en producción
 
         // Obtener el rol USER desde la base de datos
         Rol rolUser = rolRepository.findByNombre(NombreRol.USER)
                 .orElseThrow(() -> new RuntimeException("Error: Rol USER no encontrado"));
 
-        Set<Rol> roles = new HashSet<>();
-        roles.add(rolUser);
-        usuario.setRoles(roles);
+
+        usuario.setRoles(Collections.singleton(rolUser));
 
         return usuarioRepository.save(usuario);
     }
@@ -111,21 +111,22 @@ public class UsuarioService  implements UserDetailsService {
 
         Usuario usuario = new Usuario();
         usuario.setUsername(username);
-        usuario.setPassword(password);
+        usuario.setPassword(passwordEncoder.encode(password));
 
         // Obtener el rol ADMIN desde la base de datos
         Rol rolAdmin = rolRepository.findByNombre(NombreRol.ADMIN)
                 .orElseThrow(() -> new RuntimeException("Error: Rol ADMIN no encontrado"));
 
-        Set<Rol> roles = new HashSet<>();
-        roles.add(rolAdmin);
-        usuario.setRoles(roles);
+        usuario.setRoles(Collections.singleton(rolAdmin));
 
         return usuarioRepository.save(usuario);
     }
 
     // para validar formato de email
     private boolean esEmailValido(String email) {
+        if (email == null || email.isEmpty()){
+            return false;
+        }
         return Pattern.compile(EMAIL_REGEX).matcher(email).matches();
     }
 }

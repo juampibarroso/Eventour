@@ -5,6 +5,7 @@ import com.eventour.eventour.dto.AuthResponse;
 import com.eventour.eventour.model.Usuario;
 import com.eventour.eventour.repository.UsuarioRepository;
 import com.eventour.eventour.security.jwt.JwtUtil;
+import com.eventour.eventour.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,13 +26,15 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
 
 
-    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserDetailsService userDetailsService, UsuarioRepository usuarioRepository) {
+    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserDetailsService userDetailsService, UsuarioRepository usuarioRepository, UsuarioService usuarioService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
         this.usuarioRepository = usuarioRepository;
+        this.usuarioService = usuarioService;
     }
 
 
@@ -55,6 +58,21 @@ public class AuthController {
         String token = jwtUtil.generateToken(userDetails, role);
 
         return ResponseEntity.ok(new AuthResponse(token, role));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@RequestBody AuthRequest request) {
+
+        if(request.username() == null || request.password() == null || request.username().isEmpty() || request.password().isEmpty()){
+            return ResponseEntity.badRequest().body(new AuthResponse(null, "Error: Email o contraseña no pueden estar vacíos."));
+        }
+
+
+        Usuario usuario = usuarioService.crearUsuario(request.username(), request.password());
+        UserDetails userDetails = usuarioService.loadUserByUsername((usuario.getUsername()));
+        String token = jwtUtil.generateToken(userDetails, "USER");
+
+        return ResponseEntity.ok(new AuthResponse(token, "USER"));
     }
 
 
