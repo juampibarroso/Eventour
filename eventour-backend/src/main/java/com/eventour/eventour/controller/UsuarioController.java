@@ -8,6 +8,7 @@ import com.eventour.eventour.repository.UsuarioRepository;
 import com.eventour.eventour.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -48,6 +49,7 @@ private UsuarioRepository usuarioRepository;
 
     //Crear un ADMIN (esto solo tiene que ser accesible por otro ADMIN)
     @PostMapping("/crearAdmin")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UsuarioDTO> crearAdmin(@RequestBody UsuarioDTO usuarioDTO) {
         Usuario usuario = usuarioService.crearAdmin(usuarioDTO.username(), usuarioDTO.password());
         return ResponseEntity.ok(convertirADTO(usuario));
