@@ -36,8 +36,30 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Desactivar CSRF en APIs REST
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sin sesiones
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // Permitir autenticación y registro libre
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // SOLO EL ADMIN PUEDE ACCEDER
+
+                        // **Rutas públicas**: cualquiera puede acceder, incluso sin autenticación
+                        .requestMatchers(
+                                "/api/auth/**",   // Registro y autenticación (login, register)
+                                "/api/eventos/public/**", // Eventos accesibles sin login
+                                "/api/categorias/public/**", // Categorías accesibles sin login
+                                "/public/**" // Otras rutas públicas
+                        ).permitAll()
+
+                        // **Rutas protegidas solo para usuarios autenticados**
+                        .requestMatchers(
+                                "/api/eventos/user/**", // Solo usuarios registrados pueden acceder
+                                "/api/categorias/user/**"
+                        ).hasRole("USER")
+
+                        // **Rutas restringidas solo para administradores**
+                        .requestMatchers(
+                                "/api/admin/**", // Acceso solo para ADMIN
+                                "/api/eventos/admin/**",
+                                "/api/categorias/admin/**",
+                                "/api/usuarios/crearAdmin"
+                        ).hasRole("ADMIN")
+
+                        // **Cualquier otra solicitud requiere autenticación**
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
