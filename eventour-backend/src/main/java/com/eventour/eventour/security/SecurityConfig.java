@@ -39,25 +39,31 @@ public class SecurityConfig {
 
                         // **Rutas públicas**: cualquiera puede acceder, incluso sin autenticación
                         .requestMatchers(
-                                "/api/auth/**",   // Registro y autenticación (login, register)
-                                "/api/eventos/public/**", // Eventos accesibles sin login
-                                "/api/categorias/public/**", // Categorías accesibles sin login
-                                "/public/**" // Otras rutas públicas
+                                "/api/auth/**",          // Registro y login
+                                "/api/eventos",         // Listar eventos
+                                "/api/eventos/filtrar", // Filtrar eventos
+                                "/api/eventos/buscar",  // Buscar por nombre
+                                "/api/eventos/buscar-por-fechas", // Buscar por fecha
+                                "/api/ubicaciones",     // Listar ubicaciones
+                                "/api/ubicaciones/{id}" // Ver ubicación por ID
                         ).permitAll()
 
                         // **Rutas protegidas solo para usuarios autenticados**
                         .requestMatchers(
                                 "/api/eventos/user/**", // Solo usuarios registrados pueden acceder
                                 "/api/categorias/user/**"
-                        ).hasRole("USER")
+                        ).hasAuthority("ROLE_USER")
 
                         // **Rutas restringidas solo para administradores**
                         .requestMatchers(
-                                "/api/admin/**", // Acceso solo para ADMIN
-                                "/api/eventos/admin/**",
+                                "/api/admin/**",
+                                "/api/eventos",       // Crear eventos
+                                "/api/eventos/{id}",  // Actualizar y eliminar eventos
                                 "/api/categorias/admin/**",
-                                "/api/usuarios/crearAdmin"
-                        ).hasRole("ADMIN")
+                                "/api/usuarios/crearAdmin", // Crear ADMIN
+                                "/api/usuarios/**",   // Listar, obtener y eliminar usuarios
+                                "/api/ubicaciones"    // Crear ubicación
+                        ).hasAuthority("ROLE_ADMIN")
 
                         // **Cualquier otra solicitud requiere autenticación**
                         .anyRequest().authenticated()
