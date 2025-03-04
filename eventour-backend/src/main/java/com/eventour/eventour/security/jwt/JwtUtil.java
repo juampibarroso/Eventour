@@ -34,13 +34,16 @@ public class JwtUtil {
     }
 
     public String generateToken(UserDetails userDetails, String role) {
+        String roleWithPrefix = role.startsWith("ROLE_") ? role : "ROLE_" + role; // ✅ Asegurar el prefijo ROLE_
+
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
-                .claim("role", role) // Agrega el rol al token
+                .claim("role", roleWithPrefix) // 🔹 Ahora siempre tendrá ROLE_
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
 
     public boolean validateToken(String token) {
         try {

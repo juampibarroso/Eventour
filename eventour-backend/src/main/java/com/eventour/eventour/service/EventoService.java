@@ -3,6 +3,7 @@ package com.eventour.eventour.service;
 import com.eventour.eventour.dto.EventoDTO;
 import com.eventour.eventour.model.Evento;
 import com.eventour.eventour.model.Ubicacion;
+import com.eventour.eventour.repository.BlogSpotRepository;
 import com.eventour.eventour.repository.EventoRepository;
 import com.eventour.eventour.repository.UbicacionRepository;
 import org.springframework.data.domain.Page;
@@ -21,9 +22,12 @@ public class EventoService {
 
     private final UbicacionRepository ubicacionRepository;
 
-    public EventoService (EventoRepository eventoRepository, UbicacionRepository ubicacionRepository){
+    private final BlogSpotRepository blogSpotRepository;
+
+    public EventoService (EventoRepository eventoRepository, UbicacionRepository ubicacionRepository, BlogSpotRepository blogSpotRepository){
         this.eventoRepository = eventoRepository;
         this.ubicacionRepository = ubicacionRepository;
+        this.blogSpotRepository = blogSpotRepository;
 
     }
     public Evento obtenerEventoPorId(Long eventoId){
@@ -110,6 +114,10 @@ public class EventoService {
         if (!eventoRepository.existsById(id)) {
             throw new IllegalArgumentException("El evento no existe");
         }
+
+        // Eliminar los registros relacionados en BlogSpot antes de eliminar el evento
+        blogSpotRepository.deleteByEventoId(id);
+
         eventoRepository.deleteById(id);
     }
 

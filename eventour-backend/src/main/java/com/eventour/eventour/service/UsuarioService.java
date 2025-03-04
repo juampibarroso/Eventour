@@ -6,6 +6,8 @@ import com.eventour.eventour.model.Usuario;
 import com.eventour.eventour.repository.RolRepository;
 import com.eventour.eventour.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class UsuarioService  implements UserDetailsService {
@@ -44,18 +47,14 @@ public class UsuarioService  implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
-        String[] roles = usuario.getRoles().stream()
-                .map(rol -> rol.getNombre().name())
-                .toArray(String[]::new); // ✅ Se obtiene correctamente la lista de roles del usuario
+        List<GrantedAuthority> authorities = usuario.getRoles().stream()
+                .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol.getNombre().name())) // ✅ Agregar siempre el prefijo
+                .collect(Collectors.toList());
 
-
-        return User.builder()
-                .username(usuario.getUsername())
-                .password(usuario.getPassword())
-                .roles(roles)
-                .build();
-
+        return new User(usuario.getUsername(), usuario.getPassword(), authorities);
     }
+
+
 
     public List<Usuario> obtenerTodos() {
         return usuarioRepository.findAll();
