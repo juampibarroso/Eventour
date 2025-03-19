@@ -34,6 +34,12 @@ public class EventoController {
         return new ResponseEntity<>(eventos, HttpStatus.OK);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Evento> obtenerEventoPorId(@PathVariable Long id) {
+        Evento evento = eventoService.obtenerEventoPorId(id);
+        return ResponseEntity.ok(evento);
+    }
+
     @PostMapping
     public ResponseEntity<Evento> crearEvento(@RequestBody EventoDTO eventoDTO){
         Evento nuevoEvento= eventoService.crearEvento(eventoDTO);

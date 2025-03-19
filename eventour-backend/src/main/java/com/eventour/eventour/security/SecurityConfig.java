@@ -45,7 +45,8 @@ public class SecurityConfig {
                                 "/api/eventos/buscar",  // Buscar por nombre
                                 "/api/eventos/buscar-por-fechas", // Buscar por fecha
                                 "/api/ubicaciones",     // Listar ubicaciones
-                                "/api/ubicaciones/{id}" // Ver ubicación por ID
+                                "/api/ubicaciones/{id}", // Ver ubicación por ID
+                                "/api/eventos/{id}"
                         ).permitAll()
 
                         // **Rutas protegidas solo para usuarios autenticados**
