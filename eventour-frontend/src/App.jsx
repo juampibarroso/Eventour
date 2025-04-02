@@ -1,20 +1,17 @@
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import CreateEvent from "./pages/CreateEvent";
 import BusquedaUbicacion from './pages/BusquedaUbicacion';
 import BusquedaCategoria from './pages/BusquedaCategoria';
 import BusquedaFecha from './pages/BusquedaFecha';
 import EventosDestacados from './pages/EventosDestacados';
-import EventListPage from "./pages/EventListPage"; // Nueva página de eventos
+import EventListPage from "./pages/EventListPage";
 
 function App() {
   return (
     <div className="app-container">
-      <nav className="nav-bar">
-        <Link to="/">Inicio</Link>
-        <Link to="/create-event">Crear Evento</Link>
-        <Link to="/events">Ver Todos los Eventos</Link> {/* Nuevo enlace */}
-      </nav>
+      <Navbar /> {/* ✅ NUEVA NAVBAR GLOBAL */}
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -23,7 +20,7 @@ function App() {
         <Route path="/busqueda-categoria" element={<BusquedaCategoria />} />
         <Route path="/busqueda-fecha" element={<BusquedaFecha />} />
         <Route path="/eventos-destacados" element={<EventosDestacados />} />
-        <Route path="/events" element={<EventListPage />} /> {/* Nueva ruta */}
+        <Route path="/events" element={<EventListPage />} />
       </Routes>
     </div>
   );

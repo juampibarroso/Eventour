@@ -1,0 +1,50 @@
+.sobre-nosotros-section {
+    background: linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%);
+    color: #ffffff;
+    padding: 5rem 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    text-align: left;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+  
+  .sobre-titulo {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #db49fb;
+    margin-bottom: 3rem;
+    text-align: center;
+  }
+  
+  .qa-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+  
+  .qa-item {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-left: 4px solid #db49fb;
+    padding: 1.5rem 1.5rem 1.2rem 1.5rem;
+    border-radius: 12px;
+    transition: background 0.3s ease;
+  }
+  
+  .qa-item:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+  }
+  
+  .pregunta {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+  }
+  
+  .respuesta {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #dddddd;
+  }
+  
