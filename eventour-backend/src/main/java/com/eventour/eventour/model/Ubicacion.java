@@ -9,7 +9,7 @@ import java.util.List;
 public class Ubicacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
     //anotacion para que el parametro pueda estar vacío al momento de crear el objeto.
     @Column(nullable = true)
@@ -48,7 +48,7 @@ public class Ubicacion {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 

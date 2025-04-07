@@ -26,7 +26,7 @@ public class UbicacionController {
 
     //listar todas las ubicaciones
     @GetMapping
-    public ResponseEntity<List<UbicacionDTO>> listarUbicaciones(){
+    public ResponseEntity<List<UbicacionDTO>> listarUbicaciones(@PathVariable Long id){
         return ResponseEntity.ok(ubicacionService.listarUbicaciones());
     }
 

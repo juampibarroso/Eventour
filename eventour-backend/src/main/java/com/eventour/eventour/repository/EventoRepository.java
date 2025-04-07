@@ -36,8 +36,4 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
                                @Param("fechaInicio") LocalDate fechaInicio,
                                @Param("fechaFin") LocalDate fechaFin,
                                @Param("ubicacionId") Long ubicacionId);
-
-
-    List<Evento> findByFechaInicioBetween(LocalDate fechaInicio, LocalDate fechaFin);
-
 }
