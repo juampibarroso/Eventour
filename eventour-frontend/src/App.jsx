@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { useState } from "react";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import CreateEvent from "./pages/CreateEvent";
@@ -7,11 +8,15 @@ import BusquedaCategoria from './pages/BusquedaCategoria';
 import BusquedaFecha from './pages/BusquedaFecha';
 import EventosDestacados from './pages/EventosDestacados';
 import EventListPage from "./pages/EventListPage";
+import LoginAdmin from "./components/admin/LoginAdmin";
+import DashboardAdmin from "./components/admin/DashboardAdmin";
 
 function App() {
+  const [adminAuth, setAdminAuth] = useState(false); // ✅ Estado agregado
+
   return (
     <div className="app-container">
-      <Navbar /> {/* ✅ NUEVA NAVBAR GLOBAL */}
+      <Navbar />
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -21,6 +26,16 @@ function App() {
         <Route path="/busqueda-fecha" element={<BusquedaFecha />} />
         <Route path="/eventos-destacados" element={<EventosDestacados />} />
         <Route path="/events" element={<EventListPage />} />
+        <Route
+          path="/admin"
+          element={
+            adminAuth ? (
+              <DashboardAdmin />
+            ) : (
+              <LoginAdmin onLogin={setAdminAuth} />
+            )
+          }
+        />
       </Routes>
     </div>
   );
