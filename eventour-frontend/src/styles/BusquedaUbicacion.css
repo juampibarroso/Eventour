@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap');
+
+.busqueda-container {
+  text-align: center;
+  padding: 4rem 1rem;
+  background-color: #000000; /* fondo negro puro */
+  color: #ffffff; /* texto blanco */
+  font-family: 'Montserrat', sans-serif;
+  min-height: 100vh;
+}
+
+
+.titulo-busqueda {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #db49fb;
+  margin-top: 60px; /* ✅ Separación desde el navbar */
+  margin-bottom: 2rem;
+}
+
+.input-busqueda {
+  width: 70%;
+  max-width: 600px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #d80b94;
+  outline: none;
+  margin-bottom: 2rem;
+}
+
+.mapa-contenedor {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.mensaje-cargando,
+.mensaje-vacio {
+  margin-top: 1.5rem;
+  font-weight: 500;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.cargando {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #555;
+  text-align: center;
+  margin-top: 4rem;
+}

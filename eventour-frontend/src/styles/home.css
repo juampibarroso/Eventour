@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap');
+
+body {
+  background-color: #ffffff; /* Fondo blanco */
+  color: #db49fb; /* Violeta oscuro */
+  font-family: 'Montserrat', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.
+/* ======== Contenedor del Banner ======== */
+.banner-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px; /* Separación de la nav-bar */
+}
+
+/* ======== Texto debajo del Banner ======== */
+.banner-text {
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #db49fb; /* Violeta brillante */
+  margin-top: 30px; /* Espaciado adicional */
+  letter-spacing: 1px;
+}
+
+/* ======== Contenedor Principal ======== */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+
+
+
+/* ======== Contenedor de los Enlaces ======== */
+.links-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 900px;
+  margin-top: 30px; /* Más espacio con el texto */
+}
+
+/* ======== Tarjetas de Búsqueda con Íconos ======== */
+.link-card {
+  width: 300px; /* Cuadrado */
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #db49fb; /* Violeta brillante */
+  color: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  font-weight: 500;
+}
+
+.link-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  background-color: #8a12a5; /* Púrpura más oscuro */
+}
+
+/* ======== Estilo de los Títulos dentro de las Tarjetas ======== */
+.link-title {
+  font-size: 1.7rem;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 10px;
+}
+
+
+/* ======== Íconos en las Tarjetas ======== */
+.icon {
+  font-size: 4.5rem;
+  margin-bottom: 1rem;
+  color: #ddac09; /* Amarillo brillante */
+}
+
+/* ======== Botón "Ver Todos los Eventos" ======== */
+.event-button-container {
+  
+  text-align: center;
+  margin-top: 60px;
+  margin-bottom: 60px;
+}
+
+.view-events-button {
+  background: linear-gradient(90deg, #db49fb, #8e2de2);
+  color: white;
+  padding: 14px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(219, 73, 251, 0.3);
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.view-events-button:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 6px 20px rgba(219, 73, 251, 0.5);
+}

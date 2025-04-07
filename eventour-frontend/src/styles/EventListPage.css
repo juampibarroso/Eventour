@@ -1,0 +1,96 @@
+/* EventListPage.css */
+body {
+    background-color: #000; /* Fondo negro */
+    color: #fff; /* Texto blanco para mayor contraste */
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .event-list-page {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .banner {
+    width: 100%;
+    height: 250px; /* Ajustar altura del banner */
+    background-image: url('../assets/banner.jpg'); /* Ajusta el nombre del archivo según la imagen en assets */
+    background-size: cover;
+    background-position: center;
+    border-bottom: 5px solid #8A2BE2; /* Línea decorativa */
+  }
+  
+  .event-list-page h1 {
+    color: #0a0a0a; /* Violeta brillante */
+    margin-bottom: 20px;
+    font-size: 28px;
+  }
+  
+  .event-list-page ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+  }
+  
+  .event-list-page li {
+    background: linear-gradient(135deg, #822087, #3e046d);
+    margin: 10px;
+    padding: 20px;
+    border-radius: 10px;
+    width: 200px;
+    height: 200px; /* Cuadrado */
+    box-shadow: 0 4px 8px rgba(138, 43, 226, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .event-list-page h2 {
+    margin: 5px 0;
+    color: #ffffff; /* Violeta más brillante */
+    font-size: 18px;
+  }
+  
+  .event-list-page p {
+    margin: 5px 0;
+    color: #ccc; /* Texto más claro */
+    font-size: 14px;
+  }
+  
+  /* Botón Todos los Eventos */
+  .event-button-container {
+    margin-top: 40px;
+  }
+  
+  .view-events-button {
+    background-color: #8A2BE2;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 40px;
+  }
+  
+  .view-events-button:hover {
+    background-color: #7A1FC2;
+  }
+  
+  /* Responsivo */
+  @media (max-width: 600px) {
+    .event-list-page ul {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .event-list-page li {
+      width: 90%;
+      height: auto;
+    }
+  }
+  
