@@ -1,17 +1,43 @@
 import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "../../styles/Admin.css";
 
 const LoginAdmin = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email === "admin@eventour.com" && password === "123456") {
-      onLogin(true);
-    } else {
-      setError("Credenciales incorrectas");
+
+    console.log("🧪 Entró al handleLogin con:", email, password); // Debug
+
+    try {
+      const response = await axios.post("http://localhost:8080/api/auth/login", {
+        username: email,
+        password: password,
+      });
+
+      const { token, role } = response.data;
+
+      if (role === "ADMIN") {
+        try {
+          localStorage.setItem("token", token);
+          localStorage.setItem("role", role);
+        } catch (err) {
+          console.warn("⚠️ No se pudo acceder a localStorage:", err);
+        }
+
+        onLogin(true);
+        navigate("/admin/dashboard");
+      } else {
+        setError("No tenés permisos de administrador.");
+      }
+    } catch (err) {
+      console.log("🧪 Error al intentar loguear:", err); // Debug
+      setError("Credenciales incorrectas o servidor no disponible.");
     }
   };
 
