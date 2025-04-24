@@ -58,13 +58,14 @@ public class SecurityConfig {
                         // **Rutas restringidas solo para administradores**
                         .requestMatchers(
                                 "/api/admin/**",
-                                "/api/eventos",       // Crear eventos
-                                "/api/eventos/{id}",  // Actualizar y eliminar eventos
+//                                "/api/eventos",       // Crear eventos
+//                                "/api/eventos/{id}",  // Actualizar y eliminar eventos
                                 "/api/categorias/admin/**",
                                 "/api/usuarios/crearAdmin", // Crear ADMIN
                                 "/api/usuarios/**",   // Listar, obtener y eliminar usuarios
                                 "/api/ubicaciones"    // Crear ubicación
-                        ).hasAuthority("ROLE_ADMIN")
+                        ).permitAll() //CAMBIAR POR EL DE ABAJO, ESTO ES SOLO PARA TESTEAR!!!
+                        //.hasAuthority("ROLE_ADMIN")
 
                         // **Cualquier otra solicitud requiere autenticación**
                         .anyRequest().authenticated()

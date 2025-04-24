@@ -6,13 +6,17 @@ export async function getEvents() {
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
-    const data = await response.json();
+
+    const text = await response.text(); // leer como texto primero
+    const data = text ? JSON.parse(text) : []; // evitar error si está vacío
+
     return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Error al obtener eventos:", error);
     return [];
   }
 }
+
 export async function createEvent(eventData) {
   const response = await fetch(API_URL, {
     method: "POST",

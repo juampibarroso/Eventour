@@ -10,7 +10,7 @@ const DashboardAdmin = ({ onLogout }) => {
   // Cargar eventos desde el backend
   const fetchEventos = async () => {
     try {
-      const res = await fetch("https://tu-backend.com/api/eventos");
+      const res = await fetch("http://localhost:8080/api/eventos");
       const data = await res.json();
       setEventos(data);
     } catch (error) {
@@ -25,7 +25,7 @@ const DashboardAdmin = ({ onLogout }) => {
   // Crear o actualizar evento
   const handleSave = async (evento) => {
     try {
-      const res = await fetch(`https://tu-backend.com/api/eventos/${evento.id || ""}`, {
+      const res = await fetch(`http://localhost:8080/api/eventos/${evento.id || ""}`, {
         method: evento.id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(evento),
@@ -40,7 +40,7 @@ const DashboardAdmin = ({ onLogout }) => {
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este evento?")) return;
     try {
-      const res = await fetch(`https://tu-backend.com/api/eventos/${id}`, {
+      const res = await fetch(`http://localhost:8080/api/eventos/${id}`, {
         method: "DELETE",
       });
       if (res.ok) fetchEventos();
