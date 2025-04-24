@@ -1,7 +1,7 @@
-// EventListPage.jsx
 import React, { useEffect, useState } from 'react';
-import { getEvents } from '../services/Api.js'; // Asegúrate de que la ruta sea correcta
-import '../styles/EventListPage.css'; // Archivo CSS para los estilos
+import { getEvents } from '../services/Api.js';
+import { Link } from 'react-router-dom';
+import '../styles/EventListPage.css';
 
 const EventListPage = () => {
   const [events, setEvents] = useState([]);
@@ -16,24 +16,47 @@ const EventListPage = () => {
 
   return (
     <div className="event-list-page">
-      <h1>Todos los Eventos</h1>
-      {events.length === 0 ? (
-        <p>No hay eventos disponibles.</p>
-      ) : (
-        <ul>
-          {events.map((event) => (
-            <li key={event.id}>
-              <h2>{event.titulo}</h2>
-              <p>{event.descripcion}</p>
-              <p><strong>Fecha:</strong> {new Date(event.fechaInicio).toLocaleDateString()}</p>
-              <p><strong>Estado:</strong> {event.estado}</p>
-              <p><strong>Categoría:</strong> {event.categoriaEvento}</p>
-            
-              <p><strong>Ubicación:</strong> {event.ubicacion}</p>
-            </li>
-          ))}
-        </ul>
-      )}
+      <header className="event-list-header">
+        <h1>Todos los Eventos</h1>
+        <p>Explorá y filtrá eventos según tu interés:</p>
+        <div className="event-nav-grid">
+          <Link to="/busqueda-categoria" className="nav-card">
+            <span role="img" aria-label="categoría">🎭</span>
+            Categorías
+          </Link>
+          <Link to="/busqueda-ubicacion" className="nav-card">
+            <span role="img" aria-label="ubicación">📍</span>
+            Ubicación
+          </Link>
+          <Link to="/busqueda-fecha" className="nav-card">
+            <span role="img" aria-label="fecha">📅</span>
+            Fechas
+          </Link>
+          <Link to="/eventos-destacados" className="nav-card">
+            <span role="img" aria-label="destacados">🌟</span>
+            Destacados
+          </Link>
+        </div>
+      </header>
+
+      <section className="event-list-content">
+        {events.length === 0 ? (
+          <p className="no-eventos">No hay eventos disponibles.</p>
+        ) : (
+          <ul className="eventos-grid">
+            {events.map((evento) => (
+              <li key={evento.id} className="evento-card">
+                <h2>{evento.titulo}</h2>
+                <p>{evento.descripcion}</p>
+                <p><strong>Fecha:</strong> {new Date(evento.fechaInicio).toLocaleDateString()}</p>
+                <p><strong>Estado:</strong> {evento.estado}</p>
+                <p><strong>Categoría:</strong> {evento.categoriaEvento}</p>
+                <p><strong>Ubicación:</strong> {evento.ubicacion}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 };

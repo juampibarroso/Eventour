@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from "@react-google-maps/api";
-import "../styles/BusquedaUbicacion.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import "../styles/BusquedaUbicacion.css";
 
 const mapContainerStyle = {
   width: "100%",
@@ -10,7 +10,7 @@ const mapContainerStyle = {
 };
 
 const defaultCenter = {
-  lat: -32.889458, // Mendoza, Argentina
+  lat: -32.889458,
   lng: -68.845839,
 };
 
@@ -28,7 +28,19 @@ const BusquedaUbicacion = () => {
   const autocompleteRef = useRef(null);
 
   useEffect(() => {
-    fetchEventos(defaultCenter.lat, defaultCenter.lng);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setMapCenter(userLocation);
+        fetchEventos(userLocation.lat, userLocation.lng);
+      },
+      () => {
+        fetchEventos(defaultCenter.lat, defaultCenter.lng);
+      }
+    );
   }, []);
 
   const fetchEventos = async (lat, lng) => {
@@ -91,6 +103,22 @@ const BusquedaUbicacion = () => {
 
         {loading && <p className="mensaje-cargando">Cargando eventos cercanos...</p>}
         {!loading && eventos.length === 0 && <p className="mensaje-vacio">No se encontraron eventos cerca de esta ubicación.</p>}
+
+        {!loading && eventos.length > 0 && (
+          <div className="lista-eventos">
+            <h2 className="subtitulo-eventos">Eventos cercanos</h2>
+            {eventos.map((evento) => (
+              <div key={evento.id} className="evento-card">
+                <h3>{evento.titulo}</h3>
+                <p>{evento.descripcion}</p>
+                <p><strong>Fecha:</strong> {new Date(evento.fechaInicio).toLocaleDateString()}</p>
+                {evento.distancia && (
+                  <p><strong>Distancia:</strong> {evento.distancia.toFixed(1)} km</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <Footer />
     </>

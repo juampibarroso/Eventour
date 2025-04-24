@@ -16,13 +16,13 @@
   background-position: center;
   opacity: 0;
   transition: opacity 1s ease-in-out;
+  
 }
 
 .slide.active {
   opacity: 1;
   z-index: 1;
 }
-
 
 .overlay {
   position: absolute;
@@ -32,10 +32,14 @@
   color: white;
   text-align: center;
   z-index: 2;
-  padding: 1rem;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.4); /* Fondo oscuro translúcido */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  max-width: 90%;
   animation: fadeSlideUp 1.5s ease forwards;
 }
-
 
 .title {
   font-size: 4rem;
@@ -62,13 +66,12 @@
   transition: transform 0.3s ease;
 }
 
-
-
 .carousel-buttons {
   display: flex;
   gap: 1.5rem;
   justify-content: center;
   flex-wrap: wrap;
+  margin-top: 2rem;
 }
 
 .btn-carousel {
@@ -127,7 +130,6 @@
   right: 15px;
 }
 
-
 .fade-text {
   opacity: 0;
   transform: translateY(20px);
@@ -139,17 +141,13 @@
   transform: translateY(0);
 }
 
-
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .carousel-nav {
     font-size: 1.5rem;
     padding: 0.3rem 0.6rem;
   }
-}
 
-
-
-@media (max-width: 768px) {
   .title {
     font-size: 2.5rem;
   }
@@ -161,8 +159,12 @@
   .btn-carousel {
     font-size: 0.9rem;
   }
-}
 
+  .overlay {
+    padding: 1rem;
+    max-width: 95%;
+  }
+}
 
 @keyframes fadeSlideUp {
   0% {

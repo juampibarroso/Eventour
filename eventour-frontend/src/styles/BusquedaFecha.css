@@ -1,121 +1,148 @@
-/* Estilos Generales */
 .busqueda-fecha-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background-color: #000000;
-    padding: 20px;
-    text-align: center;
-  }
-  
-  /* Títulos y texto */
-  .titulo {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 10px;
-  }
-  
-  .descripcion {
-    font-size: 1.2rem;
-    color: #666;
-    margin-bottom: 20px;
-  }
-  
-  /* Selector de fechas */
-  .fecha-seleccion {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .label-fecha {
-    font-size: 1rem;
-    font-weight: bold;
-    color: #444;
-  }
-  
-  .input-fecha {
-    padding: 10px;
-    font-size: 1rem;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    background-color: white;
-    width: 100%;
-    max-width: 250px;
-    text-align: center;
-  }
-  
-  .input-fecha:focus {
-    border-color: #007bff;
-    box-shadow: 2px 2px 12px rgba(0, 123, 255, 0.3);
-  }
-  
-  /* Botón de búsqueda */
-  .boton-buscar {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    font-size: 1.2rem;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 10px;
-    transition: 0.3s;
-  }
-  
-  .boton-buscar:hover {
-    background-color: #0056b3;
-  }
-  
-  /* Contenedor de eventos */
-  .eventos-container {
-    margin-top: 20px;
-    width: 100%;
-    max-width: 600px;
-  }
-  
-  /* Tarjetas de eventos */
-  .eventos-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .evento-card {
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-    text-align: left;
-  }
-  
-  .evento-titulo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #222;
-  }
-  
-  .evento-descripcion {
-    font-size: 1rem;
-    color: #555;
-    margin: 8px 0;
-  }
-  
-  .evento-fecha {
-    font-size: 0.9rem;
-    color: #777;
-    font-style: italic;
-  }
-  
-  /* Mensaje de No Eventos */
-  .no-eventos {
-    font-size: 1.2rem;
-    color: #888;
-    margin-top: 10px;
-  }
-  
+  padding: 7rem 2rem 4rem;
+  background: linear-gradient(180deg, #0b0b0b, #151515);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #f1f1f1;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.titulo-fecha {
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, #db49fb, #ff6ec4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 12px rgba(219, 73, 251, 0.4);
+  margin-bottom: 1rem;
+}
+
+.descripcion-fecha {
+  font-size: 1.1rem;
+  color: #ccc;
+  margin-bottom: 2.5rem;
+  text-align: center;
+  max-width: 500px;
+}
+
+.fecha-card {
+  background-color: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 0 15px rgba(219, 73, 251, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 2rem;
+}
+
+.fecha-input-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.label-fecha {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+  text-align: left;
+}
+
+.input-fecha {
+  padding: 10px 16px;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 1px solid #444;
+  background-color: #111;
+  color: white;
+  text-align: center;
+  transition: border 0.3s, box-shadow 0.3s;
+}
+
+.input-fecha:focus {
+  border-color: #db49fb;
+  box-shadow: 0 0 10px rgba(219, 73, 251, 0.3);
+  outline: none;
+}
+
+.boton-buscar {
+  background: linear-gradient(90deg, #db49fb, #8e2de2);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(219, 73, 251, 0.3);
+}
+
+.boton-buscar:hover {
+  transform: scale(1.05);
+  background: #b832d6;
+}
+
+.eventos-container {
+  width: 100%;
+  max-width: 700px;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.subtitulo {
+  font-size: 1.6rem;
+  color: #db49fb;
+  margin-bottom: 1rem;
+}
+
+.eventos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.evento-card {
+  background: #1a1a1a;
+  padding: 1.5rem;
+  border-radius: 14px;
+  border-left: 5px solid #db49fb;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  transition: transform 0.3s ease;
+  text-align: left;
+}
+
+.evento-card:hover {
+  transform: scale(1.02);
+}
+
+.evento-titulo {
+  font-size: 1.4rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+.evento-descripcion {
+  font-size: 1rem;
+  color: #ccc;
+  margin: 0.5rem 0;
+}
+
+.evento-fecha {
+  font-size: 0.9rem;
+  color: #aaa;
+  font-style: italic;
+}
+
+.no-eventos {
+  color: #888;
+  font-size: 1.1rem;
+  margin-top: 2rem;
+}

@@ -4,31 +4,31 @@ import "../styles/HeroCarousel.css";
 const slides = [
   {
     id: 1,
-    image: "./src/assets/fondos/1.jpg",
+    image: "./src/assets/fondos/88.png",
     title: "Deportes y Aventura",
     subtitle: "Maratones, trekking, ciclismo, torneos deportivos y actividades al aire libre.",
   },
   {
     id: 2,
-    image: "./src/assets/fondos/2.jpg",
+    image: "./src/assets/fondos/33.jpg",
     title: "Gastronomía y Vino",
     subtitle: "Degustaciones, ferias gastronómicas, festivales de vino y cenas temáticas.",
   },
   {
     id: 3,
-    image: "./src/assets/fondos/11.jpg",
+    image: "./src/assets/fondos/55.jpg",
     title: "Ferias y Exposiciones",
     subtitle: "Ferias de emprendedores, artesanías, tecnología, moda y belleza.",
   },
   {
     id: 4,
-    image: "./src/assets/fondos/7.jpg",
+    image: "./src/assets/fondos/14.jpg",
     title: "Música y Espectáculos",
     subtitle: "Conciertos, recitales, teatro, danza y cine.",
   },
   {
     id: 5,
-    image: "./src/assets/fondos/6.jpg",
+    image: "./src/assets/fondos/99.jpg",
     title: "Arte y Cultura",
     subtitle: "Exposiciones, ferias culturales, presentaciones literarias y actividades tradicionales.",
   },
@@ -89,7 +89,7 @@ const HeroCarousel = () => {
             <p className={`subtitle fade-text show`}>{slide.subtitle}</p>
             <div className="carousel-buttons">
               <a href="#eventos" className="btn-carousel">Ver Eventos</a>
-              <a href="#destacados" className="btn-carousel btn-outline">Más Info</a>
+              
             </div>
           </div>
           )}
