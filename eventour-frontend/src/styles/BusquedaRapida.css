@@ -16,10 +16,31 @@
 }
 
 .busqueda-grid {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 2rem;
+    padding: 2rem;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.3); /* overlay negro translúcido */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    overflow: hidden;
+    z-index: 1;
 }
+
+/* Fondo con imagen difusa */
+.busqueda-grid::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url('../assets/fondos/14.jpg') center/cover no-repeat;
+    filter: blur(1px) brightness(0.8) saturate(120%);
+    opacity: 0.9;
+    z-index: -1;
+    pointer-events: none;
+}
+
 
 .busqueda-card {
     background-color: #1e1e1e;
