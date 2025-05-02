@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
-public class UsuarioService  implements UserDetailsService {
+public class UsuarioService {
 
 
     private  final UsuarioRepository usuarioRepository;
@@ -42,7 +42,7 @@ public class UsuarioService  implements UserDetailsService {
     }
 
 
-    @Override
+
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));

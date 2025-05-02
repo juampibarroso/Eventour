@@ -4,10 +4,14 @@ import com.eventour.eventour.security.jwt.JwtAuthenticationFilter;
 import com.eventour.eventour.security.jwt.JwtUtil;
 import com.eventour.eventour.util.ApplicationContextProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -21,6 +25,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
 
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -58,13 +64,14 @@ public class SecurityConfig {
                         // **Rutas restringidas solo para administradores**
                         .requestMatchers(
                                 "/api/admin/**",
-                                "/api/eventos",       // Crear eventos
-                                "/api/eventos/{id}",  // Actualizar y eliminar eventos
+//                                "/api/eventos",       // Crear eventos
+//                                "/api/eventos/{id}",  // Actualizar y eliminar eventos
                                 "/api/categorias/admin/**",
                                 "/api/usuarios/crearAdmin", // Crear ADMIN
                                 "/api/usuarios/**",   // Listar, obtener y eliminar usuarios
                                 "/api/ubicaciones"    // Crear ubicación
-                        ).hasAuthority("ROLE_ADMIN")
+                        ).permitAll() //CAMBIAR POR EL DE ABAJO, ESTO ES SOLO PARA TESTEAR!!!
+                        //.hasAuthority("ROLE_ADMIN")
 
                         // **Cualquier otra solicitud requiere autenticación**
                         .anyRequest().authenticated()
@@ -79,10 +86,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
+    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
 
+        return new ProviderManager(authProvider);
+    }
 
     }
 

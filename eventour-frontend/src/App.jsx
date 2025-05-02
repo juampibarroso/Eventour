@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from "react";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -27,13 +27,15 @@ function App() {
         <Route path="/eventos-destacados" element={<EventosDestacados />} />
         <Route path="/events" element={<EventListPage />} />
         <Route
+          path="/admin/dashboard"
+          element={
+            adminAuth ? <DashboardAdmin /> : <Navigate to="/admin" />
+          }
+        />
+        <Route
           path="/admin"
           element={
-            adminAuth ? (
-              <DashboardAdmin />
-            ) : (
-              <LoginAdmin onLogin={setAdminAuth} />
-            )
+            adminAuth ? <Navigate to="/admin/dashboard" /> : <LoginAdmin onLogin={setAdminAuth} />
           }
         />
       </Routes>
@@ -42,3 +44,4 @@ function App() {
 }
 
 export default App;
+
