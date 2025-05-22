@@ -2,10 +2,16 @@ import React, { useState, useEffect } from "react";
 import "../../styles/Admin.css";
 
 const initialForm = {
-  nombre: "",
+  titulo: "",
   descripcion: "",
-  fecha: "",
-  categoria: "",
+  fechaInicio: "",
+  fechaFin: "",
+  precio: 0,
+  imagen: "",
+  estado: "ACTIVO",
+  ubicacionId: "1", // valor por defecto hasta cargar dinámico
+  categoriaEvento: "",
+  destacado: false,
 };
 
 const categorias = [
@@ -29,8 +35,11 @@ const EventForm = ({ onSave, eventoActual, setEventoActual }) => {
   }, [eventoActual]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -45,9 +54,9 @@ const EventForm = ({ onSave, eventoActual, setEventoActual }) => {
       <h2>{formData.id ? "Editar Evento" : "Crear Evento"}</h2>
       <input
         type="text"
-        name="nombre"
-        placeholder="Nombre del evento"
-        value={formData.nombre}
+        name="titulo"
+        placeholder="Título del evento"
+        value={formData.titulo}
         onChange={handleChange}
         required
       />
@@ -60,24 +69,49 @@ const EventForm = ({ onSave, eventoActual, setEventoActual }) => {
       ></textarea>
       <input
         type="date"
-        name="fecha"
-        value={formData.fecha}
+        name="fechaInicio"
+        value={formData.fechaInicio}
         onChange={handleChange}
         required
       />
-      <select
-        name="categoria"
-        value={formData.categoria}
+      <input
+        type="date"
+        name="fechaFin"
+        value={formData.fechaFin}
         onChange={handleChange}
         required
-      >
+      />
+      <input
+        type="number"
+        name="precio"
+        placeholder="Precio"
+        value={formData.precio}
+        onChange={handleChange}
+        required
+      />
+      <input
+        type="text"
+        name="imagen"
+        placeholder="URL de imagen (opcional)"
+        value={formData.imagen}
+        onChange={handleChange}
+      />
+      <select name="categoriaEvento" value={formData.categoriaEvento} onChange={handleChange} required>
         <option value="">Selecciona una categoría</option>
         {categorias.map((cat) => (
-          <option key={cat.value} value={cat.value}>
-            {cat.label}
-          </option>
+          <option key={cat.value} value={cat.value}>{cat.label}</option>
         ))}
       </select>
+      <select name="ubicacionId" value={formData.ubicacionId} onChange={handleChange} required>
+        <option value="">Selecciona una ubicación</option>
+        <option value="1">Ubicación 1</option>
+        <option value="2">Ubicación 2</option>
+        <option value="3">Ubicación 3</option>
+      </select>
+      <label>
+        Destacado:
+        <input type="checkbox" name="destacado" checked={formData.destacado} onChange={handleChange} />
+      </label>
       <button type="submit">{formData.id ? "Actualizar" : "Crear"}</button>
     </form>
   );

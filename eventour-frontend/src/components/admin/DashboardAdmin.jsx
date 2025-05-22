@@ -7,7 +7,6 @@ const DashboardAdmin = ({ onLogout }) => {
   const [eventos, setEventos] = useState([]);
   const [eventoActual, setEventoActual] = useState(null);
 
-  // Cargar eventos desde el backend
   const fetchEventos = async () => {
     try {
       const res = await fetch("http://localhost:8080/api/eventos");
@@ -21,12 +20,14 @@ const DashboardAdmin = ({ onLogout }) => {
   useEffect(() => {
     fetchEventos();
   }, []);
-
-  // Crear o actualizar evento
+  
   const handleSave = async (evento) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/eventos/${evento.id || ""}`, {
-        method: evento.id ? "PUT" : "POST",
+      const isEdit = !!evento.id;
+      const url = isEdit ? `http://localhost:8080/api/eventos/${evento.id}` : "http://localhost:8080/api/eventos";
+      const method = isEdit ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(evento),
       });
@@ -36,7 +37,6 @@ const DashboardAdmin = ({ onLogout }) => {
     }
   };
 
-  // Eliminar evento
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este evento?")) return;
     try {
