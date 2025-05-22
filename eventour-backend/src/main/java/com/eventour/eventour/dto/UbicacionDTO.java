@@ -4,7 +4,7 @@ public record UbicacionDTO(
         Long id,
         String nombre,
         String direccion,
-        String ciudad,
+        String localidad,
         Double latitud,
         Double longitud
 ) {

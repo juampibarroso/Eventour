@@ -1,6 +1,8 @@
 package com.eventour.eventour.service;
 
 import com.eventour.eventour.dto.UbicacionDTO;
+import com.eventour.eventour.model.Localidad;
+import com.eventour.eventour.model.Oasis;
 import com.eventour.eventour.model.Ubicacion;
 import com.eventour.eventour.repository.UbicacionRepository;
 import org.springframework.stereotype.Service;
@@ -13,54 +15,48 @@ public class UbicacionService {
 
     private final UbicacionRepository ubicacionRepository;
 
-    public UbicacionService (UbicacionRepository ubicacionRepository){
+    public UbicacionService(UbicacionRepository ubicacionRepository) {
         this.ubicacionRepository = ubicacionRepository;
     }
 
-    //Crear una ubicacion
-    public UbicacionDTO crearUbicacion(UbicacionDTO ubicacionDTO){
-        Ubicacion ubicacion = new Ubicacion(
-                ubicacionDTO.nombre(),
-                ubicacionDTO.direccion(),
-                ubicacionDTO.ciudad(),
-                ubicacionDTO.latitud(),
-                ubicacionDTO.longitud()
-        );
+    // Crear una ubicacion
+    public UbicacionDTO crearUbicacion(UbicacionDTO ubicacionDTO) {
+        Ubicacion ubicacion = mapToEntity(ubicacionDTO);
         Ubicacion saved = ubicacionRepository.save(ubicacion);
         return mapToDTO(saved);
     }
 
-    //listar todas las ubicaciones
-    public List<UbicacionDTO> listarUbicaciones(){
+    // Listar todas las ubicaciones
+    public List<UbicacionDTO> listarUbicaciones() {
         return ubicacionRepository.findAll()
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
-    //obtener Ubicacion por ID
-    public UbicacionDTO obtenerUbicacionPorId(Long id){
+    // Obtener Ubicacion por ID
+    public UbicacionDTO obtenerUbicacionPorId(Long id) {
         Ubicacion ubicacion = ubicacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ubicacion no encontrada por ID: "+ id));
+                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con ID: " + id));
         return mapToDTO(ubicacion);
     }
 
-    public UbicacionDTO actualizarUbicacion(Long id, UbicacionDTO ubicacionDTO){
+    // Actualizar ubicacion
+    public UbicacionDTO actualizarUbicacion(Long id, UbicacionDTO ubicacionDTO) {
         Ubicacion ubicacion = ubicacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ubicacion no encontrada por ID:" + id));
+                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con ID: " + id));
 
         ubicacion.setNombre(ubicacionDTO.nombre());
         ubicacion.setDireccion(ubicacionDTO.direccion());
-        ubicacion.setCiudad(ubicacionDTO.ciudad());
+        ubicacion.setLocalidad(ubicacionDTO.localidad()); // ✅ corregido
         ubicacion.setLatitud(ubicacionDTO.latitud());
         ubicacion.setLongitud(ubicacionDTO.longitud());
 
         Ubicacion updated = ubicacionRepository.save(ubicacion);
         return mapToDTO(updated);
-
     }
 
-    //eliminar ubicacion
+    // Eliminar ubicacion
     public void eliminarUbicacion(Long id) {
         if (!ubicacionRepository.existsById(id)) {
             throw new RuntimeException("Ubicación no encontrada con ID: " + id);
@@ -68,21 +64,38 @@ public class UbicacionService {
         ubicacionRepository.deleteById(id);
     }
 
-    //Mapear Ubicacion a UbicacionDTO
-    private UbicacionDTO mapToDTO(Ubicacion ubicacion){
+    // Mapear entidad -> DTO
+    private UbicacionDTO mapToDTO(Ubicacion ubicacion) {
         return new UbicacionDTO(
                 ubicacion.getId(),
                 ubicacion.getNombre(),
                 ubicacion.getDireccion(),
-                ubicacion.getCiudad(),
+                ubicacion.getLocalidad(),
                 ubicacion.getLatitud(),
                 ubicacion.getLongitud()
         );
     }
 
+    // Mapear DTO -> entidad
+    private Ubicacion mapToEntity(UbicacionDTO ubicacionDTO) {
+        Localidad localidadEnum = Localidad.valueOf(ubicacionDTO.localidad().toUpperCase().replace(" ", "_"));
+        Oasis oasis = localidadEnum.getOasis();
 
-
-
-
-
+        return new Ubicacion(
+                ubicacionDTO.nombre(),
+                ubicacionDTO.direccion(),
+                ubicacionDTO.localidad(),
+                oasis,
+                ubicacionDTO.latitud(),
+                ubicacionDTO.longitud()
+        );
+    }
 }
+
+
+
+
+
+
+
+
