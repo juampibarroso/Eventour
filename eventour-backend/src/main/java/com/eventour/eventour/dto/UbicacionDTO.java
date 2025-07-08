@@ -5,6 +5,7 @@ public record UbicacionDTO(
         String nombre,
         String direccion,
         String localidad,
+        String oasis,
         Double latitud,
         Double longitud
 ) {

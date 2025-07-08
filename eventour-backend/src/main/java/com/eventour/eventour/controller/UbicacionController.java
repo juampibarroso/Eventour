@@ -51,6 +51,16 @@ public class UbicacionController {
         ubicacionService.eliminarUbicacion(id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/filtrar/oasis")
+    public ResponseEntity<List<UbicacionDTO>> filtrarPorOasis(@RequestParam String oasis) {
+        return ResponseEntity.ok(ubicacionService.filtrarPorOasis(oasis));
+    }
+
+    @GetMapping("/filtrar/localidad")
+    public ResponseEntity<List<UbicacionDTO>> filtrarPorLocalidad(@RequestParam String localidad) {
+        return ResponseEntity.ok(ubicacionService.filtrarPorLocalidad(localidad));
+    }
+
 
 
 }

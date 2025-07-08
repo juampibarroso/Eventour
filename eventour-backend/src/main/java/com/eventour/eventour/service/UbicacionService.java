@@ -71,10 +71,35 @@ public class UbicacionService {
                 ubicacion.getNombre(),
                 ubicacion.getDireccion(),
                 ubicacion.getLocalidad(),
+                ubicacion.getOasis().name(),
                 ubicacion.getLatitud(),
                 ubicacion.getLongitud()
         );
     }
+
+    public List<UbicacionDTO> filtrarPorOasis(String oasis) {
+        return ubicacionRepository.findByOasis(Oasis.valueOf(oasis.toUpperCase()))
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    public List<UbicacionDTO> filtrarPorLocalidad(String localidad) {
+        return ubicacionRepository.findByLocalidad(localidad.toUpperCase())
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+
+    public List<UbicacionDTO> filtrarPorOasisYLocalidad(String oasis, String localidad) {
+        return ubicacionRepository
+                .findByOasisAndLocalidad(Oasis.valueOf(oasis.toUpperCase()), localidad.toUpperCase())
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
 
     // Mapear DTO -> entidad
     private Ubicacion mapToEntity(UbicacionDTO ubicacionDTO) {
