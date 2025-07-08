@@ -3,6 +3,7 @@ import EventForm from "./EventForm";
 import EventList from "./EventList";
 import "../../styles/Admin.css";
 
+
 const DashboardAdmin = ({ onLogout }) => {
   const [eventos, setEventos] = useState([]);
   const [eventoActual, setEventoActual] = useState(null);

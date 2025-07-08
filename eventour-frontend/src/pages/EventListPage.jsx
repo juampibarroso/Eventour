@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getEvents } from '../services/Api.js';
 import { Link } from 'react-router-dom';
+import EventCard from '../components/EventCard';
 import '../styles/EventListPage.css';
 
 const EventListPage = () => {
@@ -43,18 +44,11 @@ const EventListPage = () => {
         {events.length === 0 ? (
           <p className="no-eventos">No hay eventos disponibles.</p>
         ) : (
-          <ul className="eventos-grid">
+          <div className="eventos-grid">
             {events.map((evento) => (
-              <li key={evento.id} className="evento-card">
-                <h2>{evento.titulo}</h2>
-                <p>{evento.descripcion}</p>
-                <p><strong>Fecha:</strong> {new Date(evento.fechaInicio).toLocaleDateString()}</p>
-                <p><strong>Estado:</strong> {evento.estado}</p>
-                <p><strong>Categoría:</strong> {evento.categoriaEvento}</p>
-                <p><strong>Ubicación:</strong> {evento.ubicacion}</p>
-              </li>
+              <EventCard key={evento.id} event={evento} />
             ))}
-          </ul>
+          </div>
         )}
       </section>
     </div>
