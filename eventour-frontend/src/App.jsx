@@ -10,6 +10,8 @@ import EventosDestacados from './pages/EventosDestacados';
 import EventListPage from "./pages/EventListPage";
 import LoginAdmin from "./components/admin/LoginAdmin";
 import DashboardAdmin from "./components/admin/DashboardAdmin";
+import EventDetailPage from "./pages/EventDetailPage";
+
 
 function App() {
   const [adminAuth, setAdminAuth] = useState(false); // ✅ Estado agregado
@@ -26,6 +28,8 @@ function App() {
         <Route path="/busqueda-fecha" element={<BusquedaFecha />} />
         <Route path="/eventos-destacados" element={<EventosDestacados />} />
         <Route path="/events" element={<EventListPage />} />
+        <Route path="/evento/:id" element={<EventDetailPage />} />
+
         <Route
           path="/admin/dashboard"
           element={

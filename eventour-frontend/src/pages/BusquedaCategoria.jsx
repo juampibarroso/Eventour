@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import EventCard from "../components/EventCard";
 import "../styles/BusquedaCategoria.css";
+import "../styles/EventListPage.css"; // Para usar .eventos-grid
 
 const coloresPorCategoria = {
   DEPORTESYAVENTURA: "#09c3dd",
@@ -54,7 +56,7 @@ const BusquedaCategoria = () => {
   }, []);
 
   const fetchEventosPorCategoria = (categoria) => {
-    fetch(`https://tu-backend.com/api/eventos?categoria=${categoria}`)
+    fetch(`http://localhost:8080/api/eventos?categoria=${categoria}`)
       .then((res) => res.json())
       .then((data) => setEventos(data))
       .catch((error) => console.error("Error al obtener eventos:", error));
@@ -68,8 +70,10 @@ const BusquedaCategoria = () => {
   };
 
   const eventosFiltrados = eventos.filter((evento) => {
-    const coincideNombre = evento.nombre.toLowerCase().includes(busqueda.toLowerCase());
-    const coincideFecha = fechaDesde ? new Date(evento.fecha) >= new Date(fechaDesde) : true;
+    const nombre = evento.titulo || evento.nombre || "";
+    const fecha = evento.fechaInicio || evento.fecha || "";
+    const coincideNombre = nombre.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideFecha = fechaDesde ? new Date(fecha) >= new Date(fechaDesde) : true;
     return coincideNombre && coincideFecha;
   });
 
@@ -125,19 +129,9 @@ const BusquedaCategoria = () => {
         ) : eventosFiltrados.length > 0 ? (
           <>
             <h2 className="subtitulo">Eventos encontrados:</h2>
-            <div className="eventos-lista">
+            <div className="eventos-grid">
               {eventosFiltrados.map((evento) => (
-                <div
-                  key={evento.id}
-                  className="evento-card"
-                  style={{
-                    borderLeft: `5px solid ${coloresPorCategoria[categoriaSeleccionada] || "#999"}`,
-                  }}
-                >
-                  <h3 className="evento-titulo">{evento.nombre}</h3>
-                  <p className="evento-descripcion">{evento.descripcion}</p>
-                  <p className="evento-fecha">{evento.fecha}</p>
-                </div>
+                <EventCard key={evento.id} event={evento} />
               ))}
             </div>
           </>
