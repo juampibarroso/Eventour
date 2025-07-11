@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import EventCard from "../components/EventCard";
-import "../styles/BusquedaCategoria.css"; // Reutilizamos estilos visuales
-import "../styles/EventListPage.css";     // Para .eventos-grid
+import "../styles/BusquedaCategoria.css";
+import "../styles/EventListPage.css";
 
 const BusquedaFecha = () => {
   const [eventos, setEventos] = useState([]);
@@ -17,11 +17,13 @@ const BusquedaFecha = () => {
 
   const eventosFiltrados = eventos.filter((evento) => {
     const fechaEvento = new Date(evento.fechaInicio);
+    const eventoSinHora = new Date(fechaEvento.toISOString().split("T")[0]); // Solo fecha
+
     const desde = fechaDesde ? new Date(fechaDesde) : null;
     const hasta = fechaHasta ? new Date(fechaHasta) : null;
 
-    if (desde && fechaEvento < desde) return false;
-    if (hasta && fechaEvento > hasta) return false;
+    if (desde && eventoSinHora < desde) return false;
+    if (hasta && eventoSinHora > hasta) return false;
 
     return true;
   });
@@ -29,7 +31,9 @@ const BusquedaFecha = () => {
   return (
     <div className="busqueda-container">
       <h1 className="titulo">Buscar por Fecha</h1>
-      <p className="descripcion">Seleccioná una fecha o un rango para ver los eventos disponibles.</p>
+      <p className="descripcion">
+        Seleccioná una fecha o un rango para ver los eventos disponibles.
+      </p>
 
       <div className="filtros-fecha">
         <input

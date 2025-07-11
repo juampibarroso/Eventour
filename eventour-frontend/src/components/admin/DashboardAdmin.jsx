@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import EventForm from "./EventForm";
 import EventList from "./EventList";
+import UbicacionForm from "../../components/admin/UbicacionForm"; // ✅ CORREGIDO: solo 1 import
 import "../../styles/Admin.css";
-
 
 const DashboardAdmin = ({ onLogout }) => {
   const [eventos, setEventos] = useState([]);
@@ -21,11 +21,13 @@ const DashboardAdmin = ({ onLogout }) => {
   useEffect(() => {
     fetchEventos();
   }, []);
-  
+
   const handleSave = async (evento) => {
     try {
       const isEdit = !!evento.id;
-      const url = isEdit ? `http://localhost:8080/api/eventos/${evento.id}` : "http://localhost:8080/api/eventos";
+      const url = isEdit
+        ? `http://localhost:8080/api/eventos/${evento.id}`
+        : "http://localhost:8080/api/eventos";
       const method = isEdit ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
@@ -56,8 +58,29 @@ const DashboardAdmin = ({ onLogout }) => {
         <h1>Panel de Administración</h1>
         <button className="logout-button" onClick={onLogout}>Cerrar sesión</button>
       </div>
-      <EventForm onSave={handleSave} eventoActual={eventoActual} setEventoActual={setEventoActual} />
-      <EventList eventos={eventos} onEdit={setEventoActual} onDelete={handleDelete} />
+
+      <section className="admin-section">
+        <h2>Cargar Evento</h2>
+        <EventForm
+          onSave={handleSave}
+          eventoActual={eventoActual}
+          setEventoActual={setEventoActual}
+        />
+      </section>
+
+      <section className="admin-section">
+        <h2>Lista de Eventos</h2>
+        <EventList
+          eventos={eventos}
+          onEdit={setEventoActual}
+          onDelete={handleDelete}
+        />
+      </section>
+
+      <section className="admin-section">
+        <h2>Cargar Ubicación</h2>
+        <UbicacionForm />
+      </section>
     </div>
   );
 };
