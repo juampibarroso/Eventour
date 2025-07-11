@@ -53,7 +53,7 @@ const BusquedaCategoria = () => {
       setCategoriaSeleccionada(categoriaDesdeURL);
       fetchEventosPorCategoria(categoriaDesdeURL);
     }
-  }, []);
+  }, [location.search]);
 
   const fetchEventosPorCategoria = (categoria) => {
     fetch(`http://localhost:8080/api/eventos?categoria=${categoria}`)
@@ -63,6 +63,7 @@ const BusquedaCategoria = () => {
   };
 
   const handleCategoriaClick = (categoria) => {
+    if (categoria === categoriaSeleccionada) return; // evita recarga innecesaria
     setCategoriaSeleccionada(categoria);
     setBusqueda("");
     setFechaDesde("");
@@ -78,8 +79,8 @@ const BusquedaCategoria = () => {
   });
 
   return (
-    <div className="busqueda-container">
-      <h1 className="titulo">Buscar por Categoría</h1>
+    <div className="busqueda-categoria-container">
+      <h1 className="titulo-busqueda">Buscar por Categoría</h1>
       <p className="descripcion">
         Navegá entre las categorías y encontrá el evento perfecto para vos.
       </p>
@@ -106,10 +107,10 @@ const BusquedaCategoria = () => {
       </div>
 
       {categoriaSeleccionada && (
-        <>
+        <div className="filtros-container">
           <input
             type="text"
-            placeholder="Buscar eventos dentro de la categoría..."
+            placeholder="Buscar eventos por nombre..."
             className="input-busqueda"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
@@ -120,7 +121,7 @@ const BusquedaCategoria = () => {
             value={fechaDesde}
             onChange={(e) => setFechaDesde(e.target.value)}
           />
-        </>
+        </div>
       )}
 
       <div className="eventos-container">

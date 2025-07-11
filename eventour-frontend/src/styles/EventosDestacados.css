@@ -1,60 +1,99 @@
 /* Estilos Generales */
 .eventos-destacados-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background-color: #000000;
-    padding: 20px;
-    text-align: center;
-  }
-  
-  /* Títulos y texto */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #000000;
+  padding: 20px;
+  text-align: center;
+  color: white;
+}
+
+.titulo {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.descripcion {
+  font-size: 1.2rem;
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+/* Contenedor de eventos */
+.eventos-container {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Lista de eventos */
+.eventos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Tarjeta de evento destacada */
+.event-card.destacado {
+  background: #1a1a1a;
+  padding: 15px;
+  border-radius: 16px;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+  text-align: left;
+  color: white;
+  border: none;
+  position: relative;
+}
+
+/* Cinta de destacado */
+.event-card.destacado::before {
+  content: "⭐ DESTACADO";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  background: linear-gradient(90deg, #ff9800, #ffc107);
+  color: #000;
+  font-weight: bold;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.evento-titulo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.evento-descripcion {
+  font-size: 1rem;
+  color: #ddd;
+  margin: 8px 0;
+}
+
+.no-eventos {
+  font-size: 1rem;
+  color: #999;
+}
+
+@media (max-width: 768px) {
   .titulo {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 10px;
+    font-size: 1.8rem;
   }
-  
+
   .descripcion {
-    font-size: 1.2rem;
-    color: #666;
-    margin-bottom: 20px;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
   }
-  
-  /* Contenedor de eventos */
-  .eventos-container {
-    margin-top: 20px;
-    width: 100%;
-    max-width: 600px;
-  }
-  
-  /* Tarjetas de eventos */
-  .eventos-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .evento-card {
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-    text-align: left;
-  }
-  
-  .evento-titulo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #222;
-  }
-  
-  .evento-descripcion {
-    font-size: 1rem;
-    color: #555;
-    margin: 8px 0;
-  }
-  
+}
+
+/* 🔧 Corrección global para evitar bordes heredados */
+.event-card {
+  border: none !important;
+}

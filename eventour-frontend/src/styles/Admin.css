@@ -277,4 +277,16 @@
   background-color: #f44336;
   color: white;
 }
-  
+
+.admin-section {
+  margin-top: 40px;
+  padding: 20px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  border: 1px solid #8e2de2;
+}
+
+.admin-section h2 {
+  color: #ffffff;
+  margin-bottom: 10px;
+}
