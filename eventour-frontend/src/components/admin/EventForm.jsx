@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { GoogleMap, Marker, LoadScript } from "@react-google-maps/api";
 import "../../styles/Admin.css";
 
+
+const API = import.meta.env.VITE_API_URL;
 const categorias = [
   { value: "DEPORTESYAVENTURA", label: "Deportes y Aventura" },
   { value: "GASTRONOMIAYVINO", label: "Gastronomía y Vino" },
@@ -47,7 +49,8 @@ const EventForm = ({ onSave, eventoActual, setEventoActual }) => {
   useEffect(() => {
     const fetchUbicaciones = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/ubicaciones");
+        const res = await fetch(`${API}/ubicaciones`);
+
         const data = await res.json();
         setUbicaciones(data);
 

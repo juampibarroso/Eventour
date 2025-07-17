@@ -4,6 +4,11 @@ import axios from "axios";
 import "../../styles/UbicacionForm.css";
 import { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_LIBRARIES } from "../../config/googleMapsConfig";
 
+
+
+const API = import.meta.env.VITE_API_URL;
+
+
 const mapContainerStyle = {
   width: "100%",
   height: "300px",
@@ -47,7 +52,8 @@ const UbicacionForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8080/api/ubicaciones", ubicacion);
+      await axios.post(`${API}/ubicaciones`, ubicacion);
+
       alert("✅ Ubicación guardada correctamente");
       setUbicacion({
         nombre: "",

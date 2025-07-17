@@ -11,6 +11,7 @@ const CrearEvento = () => {
   });
 
   const [mensaje, setMensaje] = useState("");
+  const API = import.meta.env.VITE_API_URL;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,9 +22,9 @@ const CrearEvento = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post("http://localhost:8080/api/eventos", evento, {
+      const response = await axios.post(`${API}/eventos`, evento, {
         headers: {
-          Authorization: 'Bearer ${token}',
+          Authorization: `Bearer ${token}`, // 👈 ahora sí se interpola correctamente
         },
       });
       setMensaje("Evento creado con éxito!");
