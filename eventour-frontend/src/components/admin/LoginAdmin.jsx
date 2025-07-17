@@ -26,7 +26,7 @@ const LoginAdmin = ({ onLogin }) => {
 
     try {
         const API = import.meta.env.VITE_API_URL;
-        const response = await axios.post('${API}/auth/login', {
+        const response = await axios.post(`${API}/auth/login`, {
 
           
           username: email,
