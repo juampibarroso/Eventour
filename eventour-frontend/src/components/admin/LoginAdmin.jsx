@@ -25,9 +25,11 @@ const LoginAdmin = ({ onLogin }) => {
     console.log("🧪 Entró al handleLogin con:", email, password);
 
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/login", {
-        username: email,
-        password: password,
+        const API = import.meta.env.VITE_API_URL;
+        const response = await axios.post('${API}/auth/login', {
+          username: email,
+          password: password,
+
       });
 
       const { token, role } = response.data;

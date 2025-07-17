@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 import EventForm from "./EventForm";
 import EventList from "./EventList";
-import UbicacionForm from "../../components/admin/UbicacionForm"; // ✅ CORREGIDO: solo 1 import
+import UbicacionForm from "../../components/admin/UbicacionForm";
 import "../../styles/Admin.css";
 
 const DashboardAdmin = ({ onLogout }) => {
   const [eventos, setEventos] = useState([]);
   const [eventoActual, setEventoActual] = useState(null);
+  const API = import.meta.env.VITE_API_URL;
 
   const fetchEventos = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/eventos");
+      const res = await fetch(`${API}/eventos`);
       const data = await res.json();
       setEventos(data);
     } catch (error) {
@@ -26,8 +27,8 @@ const DashboardAdmin = ({ onLogout }) => {
     try {
       const isEdit = !!evento.id;
       const url = isEdit
-        ? `http://localhost:8080/api/eventos/${evento.id}`
-        : "http://localhost:8080/api/eventos";
+        ? `${API}/eventos/${evento.id}`
+        : `${API}/eventos`;
       const method = isEdit ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
@@ -43,7 +44,7 @@ const DashboardAdmin = ({ onLogout }) => {
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este evento?")) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/eventos/${id}`, {
+      const res = await fetch(`${API}/eventos/${id}`, {
         method: "DELETE",
       });
       if (res.ok) fetchEventos();
