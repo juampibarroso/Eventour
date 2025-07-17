@@ -27,10 +27,14 @@ const LoginAdmin = ({ onLogin }) => {
     try {
         const API = import.meta.env.VITE_API_URL;
         const response = await axios.post('${API}/auth/login', {
+
+          
           username: email,
           password: password,
 
       });
+      
+      console.log("Datos devuelto por el backend: ",response.data);
 
       const { token, role } = response.data;
 
