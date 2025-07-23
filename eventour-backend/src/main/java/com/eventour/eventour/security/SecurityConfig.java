@@ -21,8 +21,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Autowired
@@ -32,6 +37,21 @@ public class SecurityConfig {
 
     public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter; // ✅ Se inyecta con `@Lazy` para evitar el ciclo
+        this.userDetailsService = userDetailsService;
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("https://eventour.com.ar"); // Dominio del frontend
+        configuration.addAllowedOrigin("http://localhost:5173");   // Para desarrollo local (opcional)
+        configuration.addAllowedMethod("*"); // GET, POST, PUT, DELETE, etc.
+        configuration.addAllowedHeader("*"); // Acepta cualquier header
+        configuration.setAllowCredentials(true); // Para permitir cookies/token
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
@@ -39,7 +59,9 @@ public class SecurityConfig {
 
 
         return http
+
                 .csrf(csrf -> csrf.disable()) // Desactivar CSRF en APIs REST
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sin sesiones
                 .authorizeHttpRequests(auth -> auth
 
