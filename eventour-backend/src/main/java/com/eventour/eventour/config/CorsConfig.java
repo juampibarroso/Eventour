@@ -15,6 +15,7 @@ public class CorsConfig {
                 registry.addMapping("/**")
                         .allowedOrigins("https://eventour.com.ar")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
                         .allowCredentials(true);
             }
         };
