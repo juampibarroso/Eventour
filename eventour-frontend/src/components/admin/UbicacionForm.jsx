@@ -59,7 +59,6 @@ const UbicacionForm = () => {
         nombre: "",
         direccion: "",
         oasis: "",
-        localidad: "",
         latitud: null,
         longitud: null,
       });
@@ -100,27 +99,14 @@ const UbicacionForm = () => {
           </Autocomplete>
 
           <select name="oasis" value={ubicacion.oasis} onChange={handleChange} required>
-            <option value="">Seleccionar oasis</option>
-            <option value="OASIS_SUR">Oasis Sur</option>
+            <option value="">Seleccionar ZONA.</option>
+            <option value="ZONA_SUR">Zona Sur</option>
             <option value="VALLE_DE_UCO">Valle de Uco</option>
-            <option value="OASIS_NORTE">Oasis Norte</option>
-            <option value="OASIS_ESTE">Oasis Este</option>
+            <option value="GRAN_MENDOZA">Gran Mendoza</option>
+            <option value="ZONA_ESTE">Zona Este</option>
           </select>
 
-          <select name="localidad" value={ubicacion.localidad} onChange={handleChange} required>
-            <option value="">Seleccionar localidad</option>
-            <option value="SAN RAFAEL">San Rafael</option>
-            <option value="GENERAL ALVEAR">General Alvear</option>
-            <option value="MALARGÜE">Malargüe</option>
-            <option value="LUJÁN DE CUYO">Luján de Cuyo</option>
-            <option value="GODOY CRUZ">Godoy Cruz</option>
-            <option value="GUAYMALLÉN">Guaymallén</option>
-            <option value="LAS HERAS">Las Heras</option>
-            <option value="MAIPÚ">Maipú</option>
-            <option value="TUNUYÁN">Tunuyán</option>
-            <option value="TUPUNGATO">Tupungato</option>
-            <option value="SAN CARLOS">San Carlos</option>
-          </select>
+          
 
           <button type="submit">Guardar Ubicación</button>
         </form>

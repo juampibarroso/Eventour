@@ -18,7 +18,7 @@ public class Ubicacion {
     @Column(nullable = true)
     private String direccion;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String localidad;
 
 

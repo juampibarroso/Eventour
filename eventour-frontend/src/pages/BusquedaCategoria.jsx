@@ -55,15 +55,18 @@ const BusquedaCategoria = () => {
     }
   }, [location.search]);
 
-  const fetchEventosPorCategoria = (categoria) => {
-    fetch(`http://localhost:8080/api/eventos?categoria=${categoria}`)
+  const fetchEventosPorCategoria = (categoria) => {git 
+    const API = import.meta.env.VITE_API_URL;
+    fetch(`${API}/eventos?categoria=${categoria}`)
       .then((res) => res.json())
       .then((data) => setEventos(data))
       .catch((error) => console.error("Error al obtener eventos:", error));
   };
 
+  
+
   const handleCategoriaClick = (categoria) => {
-    if (categoria === categoriaSeleccionada) return; // evita recarga innecesaria
+    if (categoria === categoriaSeleccionada) return;
     setCategoriaSeleccionada(categoria);
     setBusqueda("");
     setFechaDesde("");

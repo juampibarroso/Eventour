@@ -16,6 +16,7 @@ const mapContainerStyle = {
 const EventDetailPage = () => {
   const { id } = useParams();
   const [evento, setEvento] = useState(null);
+  const API = import.meta.env.VITE_API_URL; // ✅ CORREGIDO
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -23,8 +24,13 @@ const EventDetailPage = () => {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:8080/api/eventos/${id}`)
-      .then((res) => res.json())
+    fetch(`${API}/eventos/${id}`) // ✅ CORREGIDO (sin repetir /api)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Error HTTP: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => setEvento(data))
       .catch((err) => console.error("Error al cargar el evento", err));
   }, [id]);
@@ -55,7 +61,6 @@ const EventDetailPage = () => {
             <p>📌 <strong>Estado:</strong> {evento.estado}</p>
           )}
 
-          {/* Ubicación textual */}
           {evento.ubicacion && (
             <>
               <p>📍 <strong>Lugar:</strong> {evento.ubicacion.nombre}</p>
@@ -65,7 +70,6 @@ const EventDetailPage = () => {
           )}
         </div>
 
-        {/* Mapa con pin */}
         {isLoaded && evento.ubicacion?.latitud && evento.ubicacion?.longitud && (
           <div className="evento-mapa-container">
             <h3>🗺️ Mapa del Evento</h3>
