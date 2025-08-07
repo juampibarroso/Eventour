@@ -8,8 +8,12 @@ const BusquedaFecha = () => {
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
 
+  // ✅ Agregado para producción
+  const API = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
-    fetch("http://localhost:8080/api/eventos")
+    // 🔄 Ruta corregida para usar la variable de entorno
+    fetch(`${API}/eventos`)
       .then((res) => res.json())
       .then((data) => setEventos(data))
       .catch((err) => console.error("Error al obtener eventos:", err));

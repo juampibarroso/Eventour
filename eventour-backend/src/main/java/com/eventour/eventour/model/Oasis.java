@@ -1,8 +1,8 @@
 package com.eventour.eventour.model;
 
 public enum Oasis {
-    OASIS_NORTE,
-    OASIS_SUR,
-    OASIS_ESTE,
+    GRAN_MENDOZA,
+    ZONA_SUR,
+    ZONA_ESTE,
     VALLE_DE_UCO
 }

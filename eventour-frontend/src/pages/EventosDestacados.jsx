@@ -5,9 +5,10 @@ import "../styles/EventListPage.css"; // Reutilizamos grid y estilos
 
 const EventosDestacados = () => {
   const [eventosDestacados, setEventosDestacados] = useState([]);
+  const API = import.meta.env.VITE_API_URL; // ✅ CORREGIDO
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/eventos") // URL base
+    fetch(`${API}/eventos`) // ✅ CORREGIDO: quitado /api redundante
       .then((res) => res.json())
       .then((data) => {
         const filtrados = data.filter((evento) => evento.destacado === true);
