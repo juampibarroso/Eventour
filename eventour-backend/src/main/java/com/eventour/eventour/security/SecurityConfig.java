@@ -1,18 +1,13 @@
 package com.eventour.eventour.security;
 
 import com.eventour.eventour.security.jwt.JwtAuthenticationFilter;
-import com.eventour.eventour.security.jwt.JwtUtil;
-import com.eventour.eventour.util.ApplicationContextProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -25,77 +20,69 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
+    private final UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter; // ✅ Se inyecta con `@Lazy` para evitar el ciclo
+    public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthenticationFilter,
+                          @Lazy UserDetailsService userDetailsService) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
     }
 
+    // === CORS centralizado (ELIMINAR CorsConfig.java) ===
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("https://eventour.com.ar"); // Dominio del frontend
-        configuration.addAllowedOrigin("http://localhost:5173");   // Para desarrollo local (opcional)
-        configuration.addAllowedMethod("*"); // GET, POST, PUT, DELETE, etc.
-        configuration.addAllowedHeader("*"); // Acepta cualquier header
-        configuration.setAllowCredentials(true); // Para permitir cookies/token
+        CorsConfiguration cfg = new CorsConfiguration();
+        cfg.setAllowCredentials(true);
+        cfg.setAllowedOrigins(List.of(
+                "https://eventour.com.ar",
+                "https://www.eventour.com.ar",
+                "http://localhost:5173"
+        ));
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        // (Opcional) headers a exponer si tu frontend los necesita:
+        // cfg.setExposedHeaders(List.of("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", cfg);
         return source;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
-
         return http
-
-                .csrf(csrf -> csrf.disable()) // Desactivar CSRF en APIs REST
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sin sesiones
+                .csrf(csrf -> csrf.disable())
+                .cors(c -> c.configurationSource(corsConfigurationSource()))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Preflight CORS
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // **Rutas públicas**: cualquiera puede acceder, incluso sin autenticación
-                        .requestMatchers(
-                                "/api/auth/**",          // Registro y login
-                                "/api/eventos",         // Listar eventos
-                                "/api/eventos/filtrar", // Filtrar eventos
-                                "/api/eventos/buscar",  // Buscar por nombre
-                                "/api/eventos/buscar-por-fechas", // Buscar por fecha
-                                "/api/ubicaciones",     // Listar ubicaciones
-                                "/api/ubicaciones/{id}", // Ver ubicación por ID
-                                "/api/eventos/{id}"
+                        // Auth público
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        // GET públicos para que el Admin liste sin token
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/eventos/**",
+                                "/api/ubicaciones/**"
                         ).permitAll()
 
-                        // **Rutas protegidas solo para usuarios autenticados**
-                        .requestMatchers(
-                                "/api/eventos/user/**", // Solo usuarios registrados pueden acceder
-                                "/api/categorias/user/**"
-                        ).hasAuthority("ROLE_USER")
+                        // Crear/editar/borrar SOLO con ADMIN
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/eventos/**",
+                                "/api/ubicaciones/**"
+                        ).hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/**").hasAuthority("ROLE_ADMIN")
 
-                        // **Rutas restringidas solo para administradores**
-                        .requestMatchers(
-                                "/api/admin/**",
-//                                "/api/eventos",       // Crear eventos
-//                                "/api/eventos/{id}",  // Actualizar y eliminar eventos
-                                "/api/categorias/admin/**",
-                                "/api/usuarios/crearAdmin", // Crear ADMIN
-                                "/api/usuarios/**",   // Listar, obtener y eliminar usuarios
-                                "/api/ubicaciones"    // Crear ubicación
-                        ).permitAll() //CAMBIAR POR EL DE ABAJO, ESTO ES SOLO PARA TESTEAR!!!
-                        //.hasAuthority("ROLE_ADMIN")
-
-                        // **Cualquier otra solicitud requiere autenticación**
+                        // Todo lo demás autenticado
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -108,16 +95,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder);
-
-        return new ProviderManager(authProvider);
+    public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return new ProviderManager(provider);
     }
-
-    }
-
-
-
-
+}
