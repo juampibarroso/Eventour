@@ -109,6 +109,7 @@ const UbicacionForm = () => {
           
 
           <button type="submit">Guardar Ubicación</button>
+          
         </form>
 
         {/* Vista previa del mapa */}

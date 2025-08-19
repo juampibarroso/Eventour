@@ -61,6 +61,11 @@ const DashboardAdmin = ({ onLogout }) => {
       </div>
 
       <section className="admin-section">
+        <h2>Cargar Ubicación</h2>
+        <UbicacionForm />
+      </section>
+
+      <section className="admin-section">
         <h2>Cargar Evento</h2>
         <EventForm
           onSave={handleSave}
@@ -78,10 +83,7 @@ const DashboardAdmin = ({ onLogout }) => {
         />
       </section>
 
-      <section className="admin-section">
-        <h2>Cargar Ubicación</h2>
-        <UbicacionForm />
-      </section>
+      
     </div>
   );
 };
