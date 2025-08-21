@@ -5,21 +5,14 @@ import com.eventour.eventour.model.Rol;
 import com.eventour.eventour.model.Usuario;
 import com.eventour.eventour.repository.RolRepository;
 import com.eventour.eventour.repository.UsuarioRepository;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
-public class UsuarioService implements UserDetailsService {
+public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
@@ -35,20 +28,7 @@ public class UsuarioService implements UserDetailsService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // 🔑 Usado por Spring Security para autenticar
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
-
-        List<GrantedAuthority> authorities = usuario.getRoles().stream()
-                .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol.getNombre().name())) // Prefijo ROLE_ obligatorio
-                .collect(Collectors.toList());
-
-        return new User(usuario.getUsername(), usuario.getPassword(), authorities);
-    }
-
-    // 📌 Métodos CRUD
+    // --- CRUD básicos ---
     public List<Usuario> obtenerTodos() {
         return usuarioRepository.findAll();
     }
@@ -88,7 +68,6 @@ public class UsuarioService implements UserDetailsService {
                 .orElseThrow(() -> new RuntimeException("Error: Rol USER no encontrado"));
 
         usuario.setRoles(Collections.singleton(rolUser));
-
         return usuarioRepository.save(usuario);
     }
 
@@ -106,15 +85,12 @@ public class UsuarioService implements UserDetailsService {
                 .orElseThrow(() -> new RuntimeException("Error: Rol ADMIN no encontrado"));
 
         usuario.setRoles(Collections.singleton(rolAdmin));
-
         return usuarioRepository.save(usuario);
     }
 
     // Validación de email
     private boolean esEmailValido(String email) {
-        if (email == null || email.isEmpty()) {
-            return false;
-        }
+        if (email == null || email.isEmpty()) return false;
         return Pattern.compile(EMAIL_REGEX).matcher(email).matches();
     }
 }
