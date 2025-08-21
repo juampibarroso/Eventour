@@ -5,7 +5,6 @@ import com.eventour.eventour.model.Rol;
 import com.eventour.eventour.model.Usuario;
 import com.eventour.eventour.repository.RolRepository;
 import com.eventour.eventour.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -20,42 +19,36 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
-public class UsuarioService {
+public class UsuarioService implements UserDetailsService {
 
-
-    private  final UsuarioRepository usuarioRepository;
-
+    private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
-
-    private  final PasswordEncoder passwordEncoder;
-
-
-
+    private final PasswordEncoder passwordEncoder;
 
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@(.+)$";
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, RolRepository rolRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository,
+                          PasswordEncoder passwordEncoder,
+                          RolRepository rolRepository) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
-        this.passwordEncoder = passwordEncoder; // ✅ Se inyecta en el constructor, eliminando dependencias circulares
-
+        this.passwordEncoder = passwordEncoder;
     }
 
-
-
+    // 🔑 Usado por Spring Security para autenticar
+    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
         List<GrantedAuthority> authorities = usuario.getRoles().stream()
-                .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol.getNombre().name())) // ✅ Agregar siempre el prefijo
+                .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol.getNombre().name())) // Prefijo ROLE_ obligatorio
                 .collect(Collectors.toList());
 
         return new User(usuario.getUsername(), usuario.getPassword(), authorities);
     }
 
-
-
+    // 📌 Métodos CRUD
     public List<Usuario> obtenerTodos() {
         return usuarioRepository.findAll();
     }
@@ -69,7 +62,7 @@ public class UsuarioService {
     }
 
     public Usuario guardar(Usuario usuario) {
-        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword())); // 🔒 siempre encripta
         return usuarioRepository.save(usuario);
     }
 
@@ -77,9 +70,8 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    //Crea un user con Rol de USER por defecto
+    // 👤 Crear usuario estándar con rol USER
     public Usuario crearUsuario(String username, String password) {
-
         if (!esEmailValido(username)) {
             throw new RuntimeException("Error: El email ingresado no es válido.");
         }
@@ -90,19 +82,17 @@ public class UsuarioService {
 
         Usuario usuario = new Usuario();
         usuario.setUsername(username);
-        usuario.setPassword(passwordEncoder.encode(password)); // Recuerda encriptar la contraseña en producción
+        usuario.setPassword(passwordEncoder.encode(password)); // 🔒 encriptar siempre
 
-        // Obtener el rol USER desde la base de datos
         Rol rolUser = rolRepository.findByNombre(NombreRol.USER)
                 .orElseThrow(() -> new RuntimeException("Error: Rol USER no encontrado"));
-
 
         usuario.setRoles(Collections.singleton(rolUser));
 
         return usuarioRepository.save(usuario);
     }
 
-    //Crea user con rol de ADMIN (solo deberia acceder el admin)
+    // 👑 Crear admin con rol ADMIN
     public Usuario crearAdmin(String username, String password) {
         if (usuarioRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Error: El usuario ya existe.");
@@ -110,9 +100,8 @@ public class UsuarioService {
 
         Usuario usuario = new Usuario();
         usuario.setUsername(username);
-        usuario.setPassword(passwordEncoder.encode(password));
+        usuario.setPassword(passwordEncoder.encode(password)); // 🔒 encriptar siempre
 
-        // Obtener el rol ADMIN desde la base de datos
         Rol rolAdmin = rolRepository.findByNombre(NombreRol.ADMIN)
                 .orElseThrow(() -> new RuntimeException("Error: Rol ADMIN no encontrado"));
 
@@ -121,9 +110,9 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    // para validar formato de email
+    // Validación de email
     private boolean esEmailValido(String email) {
-        if (email == null || email.isEmpty()){
+        if (email == null || email.isEmpty()) {
             return false;
         }
         return Pattern.compile(EMAIL_REGEX).matcher(email).matches();

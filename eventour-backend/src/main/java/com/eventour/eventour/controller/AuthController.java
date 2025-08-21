@@ -6,8 +6,11 @@ import com.eventour.eventour.model.Usuario;
 import com.eventour.eventour.repository.UsuarioRepository;
 import com.eventour.eventour.security.jwt.JwtUtil;
 import com.eventour.eventour.service.UsuarioService;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -28,8 +31,8 @@ public class AuthController {
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
 
-
-    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil, UserDetailsService userDetailsService, UsuarioRepository usuarioRepository, UsuarioService usuarioService) {
+    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
+            UserDetailsService userDetailsService, UsuarioRepository usuarioRepository, UsuarioService usuarioService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
@@ -37,25 +40,31 @@ public class AuthController {
         this.usuarioService = usuarioService;
     }
 
-
-
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()));
+        } catch (BadCredentialsException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponse(null, "Credenciales inválidas"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AuthResponse(null, "Error interno de autenticación"));
+        }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.username());
         Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(authRequest.username());
-
         if (usuarioOptional.isEmpty()) {
-            return ResponseEntity.badRequest().body(new AuthResponse(null, "Error: Usuario no encontrado"));
+            return ResponseEntity.badRequest().body(new AuthResponse(null, "Usuario no encontrado"));
         }
 
         String role = usuarioOptional.get().getRoles().stream()
                 .findFirst()
-                .map(rol -> rol.getNombre().name())
+                .map(rol -> rol.getNombre().name()) // "ADMIN" / "USER"
                 .orElse("USER");
 
-        String token = jwtUtil.generateToken(userDetails, role);
+        String token = jwtUtil.generateToken(userDetails, role); // reclama ROLE_ internamente
 
         return ResponseEntity.ok(new AuthResponse(token, role));
     }
@@ -63,10 +72,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody AuthRequest request) {
 
-        if(request.username() == null || request.password() == null || request.username().isEmpty() || request.password().isEmpty()){
-            return ResponseEntity.badRequest().body(new AuthResponse(null, "Error: Email o contraseña no pueden estar vacíos."));
+        if (request.username() == null || request.password() == null || request.username().isEmpty()
+                || request.password().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new AuthResponse(null, "Error: Email o contraseña no pueden estar vacíos."));
         }
-
 
         Usuario usuario = usuarioService.crearUsuario(request.username(), request.password());
         UserDetails userDetails = usuarioService.loadUserByUsername((usuario.getUsername()));
@@ -74,6 +84,5 @@ public class AuthController {
 
         return ResponseEntity.ok(new AuthResponse(token, "USER"));
     }
-
 
 }

@@ -30,7 +30,7 @@ public class Evento {
     private EstadoEvento estado;
 
     @ManyToOne
-    @JoinColumn(name = "ubicacion_id", nullable = false)
+    @JoinColumn(name = "ubicacion_id", nullable = true)
     private Ubicacion ubicacion;
 
     @Enumerated(EnumType.STRING)
