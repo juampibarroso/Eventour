@@ -6,7 +6,6 @@ import com.eventour.eventour.model.Usuario;
 import com.eventour.eventour.repository.UsuarioRepository;
 import com.eventour.eventour.security.jwt.JwtUtil;
 import com.eventour.eventour.service.UsuarioService;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,10 +13,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
@@ -27,12 +23,15 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;   // <-- usar SIEMPRE este para cargar usuarios
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
-            UserDetailsService userDetailsService, UsuarioRepository usuarioRepository, UsuarioService usuarioService) {
+    public AuthController(AuthenticationManager authenticationManager,
+                          JwtUtil jwtUtil,
+                          UserDetailsService userDetailsService,
+                          UsuarioRepository usuarioRepository,
+                          UsuarioService usuarioService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
@@ -44,7 +43,8 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) {
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()));
+                    new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password())
+            );
         } catch (BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new AuthResponse(null, "Credenciales inválidas"));
@@ -53,7 +53,9 @@ public class AuthController {
                     .body(new AuthResponse(null, "Error interno de autenticación"));
         }
 
+        // cargar detalles vía UserDetailsService
         UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.username());
+
         Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(authRequest.username());
         if (usuarioOptional.isEmpty()) {
             return ResponseEntity.badRequest().body(new AuthResponse(null, "Usuario no encontrado"));
@@ -64,25 +66,25 @@ public class AuthController {
                 .map(rol -> rol.getNombre().name()) // "ADMIN" / "USER"
                 .orElse("USER");
 
-        String token = jwtUtil.generateToken(userDetails, role); // reclama ROLE_ internamente
-
+        String token = jwtUtil.generateToken(userDetails, role);
         return ResponseEntity.ok(new AuthResponse(token, role));
     }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody AuthRequest request) {
-
-        if (request.username() == null || request.password() == null || request.username().isEmpty()
-                || request.password().isEmpty()) {
+        if (request.username() == null || request.password() == null
+                || request.username().isEmpty() || request.password().isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(new AuthResponse(null, "Error: Email o contraseña no pueden estar vacíos."));
         }
 
+        // crea usuario (hash dentro del service)
         Usuario usuario = usuarioService.crearUsuario(request.username(), request.password());
-        UserDetails userDetails = usuarioService.loadUserByUsername((usuario.getUsername()));
+
+        // cargar detalles vía UserDetailsService (NO desde UsuarioService)
+        UserDetails userDetails = userDetailsService.loadUserByUsername(usuario.getUsername());
+
         String token = jwtUtil.generateToken(userDetails, "USER");
-
-        return ResponseEntity.ok(new AuthResponse(token, "USER"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(token, "USER"));
     }
-
 }
