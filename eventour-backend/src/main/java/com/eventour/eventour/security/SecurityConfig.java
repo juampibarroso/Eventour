@@ -30,7 +30,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthenticationFilter,
-            @Lazy UserDetailsService userDetailsService) {
+                          @Lazy UserDetailsService userDetailsService) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
     }
@@ -43,9 +43,10 @@ public class SecurityConfig {
                 "https://eventour.com.ar",
                 "https://www.eventour.com.ar",
                 "http://localhost:*",
-                "http://127.0.0.1:*"));
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+                "http://127.0.0.1:*"
+        ));
+        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
+        cfg.setAllowedHeaders(List.of("Authorization","Content-Type","X-Requested-With","Accept","Origin"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
         return source;
@@ -54,51 +55,41 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
-                .cors(c -> c.configurationSource(corsConfigurationSource()))
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // Preflight
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .csrf(csrf -> csrf.disable())
+            .cors(c -> c.configurationSource(corsConfigurationSource()))
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // Preflight
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        .requestMatchers(
-                                "/error", // <- IMPORTANTE
-                                "/__whoami", // si lo agregaste
-                                "/actuator/health", "/actuator/info",
-                                "/favicon.ico", "//*.css", "//.js", "/**/.png", "/*/.jpg")
-                        .permitAll()
+                // **Deja pasar el controlador de error y estáticos**
+                .requestMatchers("/error", "/favicon.ico",
+                                 "/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg").permitAll()
 
-                        // Auth abierto
-                        .requestMatchers("/api/auth/**").permitAll()
+                // Auth abierto
+                .requestMatchers("/api/auth/**").permitAll()
 
-                        // GET públicos (lista y detalle)
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/eventos",
-                                "/api/eventos/**",
-                                "/api/ubicaciones",
-                                "/api/ubicaciones/**")
-                        .permitAll()
+                // GET públicos
+                .requestMatchers(HttpMethod.GET,
+                        "/api/eventos", "/api/eventos/**",
+                        "/api/ubicaciones", "/api/ubicaciones/**"
+                ).permitAll()
 
-                        // Mutaciones SOLO ADMIN
-                        .requestMatchers(HttpMethod.POST,
-                                "/api/eventos/**",
-                                "/api/ubicaciones/**")
-                        .hasRole("ADMIN") // <- usa hasRole si tu JWT trae "ADMIN"
-                        .requestMatchers(HttpMethod.POST, "/api/eventos/", "/api/ubicaciones/").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
+                // Mutaciones SOLO ADMIN
+                .requestMatchers(HttpMethod.POST, "/api/eventos/**", "/api/ubicaciones/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
 
-                        // Resto autenticado
-                        .anyRequest().authenticated())
-                // .addFilterBefore(jwtAuthenticationFilter,
-                // UsernamePasswordAuthenticationFilter.class)
-                .build();
+                // Resto autenticado
+                .anyRequest().authenticated()
+            )
+            // ⚠️ Mantén el filtro comentado hasta que el login funcione;
+            // luego lo reactivas.
+            // .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .build();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
     @Bean
     public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder) {
