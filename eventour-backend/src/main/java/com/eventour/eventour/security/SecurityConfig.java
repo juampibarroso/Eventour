@@ -75,6 +75,9 @@ public class SecurityConfig {
                         "/api/ubicaciones", "/api/ubicaciones/**"
                 ).permitAll()
 
+                .requestMatchers("/__whoami").permitAll()
+
+
                 // Mutaciones SOLO ADMIN
                 .requestMatchers(HttpMethod.POST, "/api/eventos/**", "/api/ubicaciones/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
