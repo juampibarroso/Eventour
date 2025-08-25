@@ -91,7 +91,8 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         )
         // si tenés el filtro JWT y no te está bloqueando rutas públicas, añadilo aquí:
-        // .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        
         .build();
     }
 
