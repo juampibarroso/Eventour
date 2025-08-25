@@ -13,7 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
 import java.io.IOException;
-
+    
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
