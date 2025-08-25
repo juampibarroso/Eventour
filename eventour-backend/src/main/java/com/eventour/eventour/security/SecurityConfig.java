@@ -19,6 +19,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -54,42 +56,43 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-            .csrf(csrf -> csrf.disable())
-            .cors(c -> c.configurationSource(corsConfigurationSource()))
-            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // Preflight
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+    return http
+        .csrf(csrf -> csrf.disable())
+        .cors(c -> c.configurationSource(corsConfigurationSource()))
+        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            // Preflight
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // **Deja pasar el controlador de error y estáticos**
-                .requestMatchers("/error", "/favicon.ico",
-                                 "/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg").permitAll()
+            // Recursos estáticos en ubicaciones comunes: /static, /public, /resources, /META-INF/resources
+            .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 
-                // Auth abierto
-                .requestMatchers("/api/auth/**").permitAll()
+            // Health & probes (y tu endpoint de vida si lo dejaste)
+            .requestMatchers("/", "/error", "/__whoami", "/actuator/health", "/actuator/info").permitAll()
 
-                // GET públicos
-                .requestMatchers(HttpMethod.GET,
-                        "/api/eventos", "/api/eventos/**",
-                        "/api/ubicaciones", "/api/ubicaciones/**"
-                ).permitAll()
+            // Auth abierto
+            .requestMatchers("/api/auth/**").permitAll()
 
-                .requestMatchers("/__whoami").permitAll()
+            // Lecturas públicas
+            .requestMatchers(HttpMethod.GET,
+                "/api/eventos/**",
+                "/api/ubicaciones/**"
+            ).permitAll()
 
+            // Mutaciones solo ADMIN
+            .requestMatchers(HttpMethod.POST,
+                "/api/eventos/**",
+                "/api/ubicaciones/**"
+            ).hasRole("ADMIN")
+            .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
 
-                // Mutaciones SOLO ADMIN
-                .requestMatchers(HttpMethod.POST, "/api/eventos/**", "/api/ubicaciones/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
-
-                // Resto autenticado
-                .anyRequest().authenticated()
-            )
-            // ⚠️ Mantén el filtro comentado hasta que el login funcione;
-            // luego lo reactivas.
-            // .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .build();
+            // Resto autenticado
+            .anyRequest().authenticated()
+        )
+        // si tenés el filtro JWT y no te está bloqueando rutas públicas, añadilo aquí:
+        // .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .build();
     }
 
     @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
