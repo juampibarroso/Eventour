@@ -13,7 +13,10 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
@@ -23,15 +26,17 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService;   // <-- usar SIEMPRE este para cargar usuarios
+    private final UserDetailsService userDetailsService; // <- tu UserDetailsServiceImpl
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
 
-    public AuthController(AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil,
-                          UserDetailsService userDetailsService,
-                          UsuarioRepository usuarioRepository,
-                          UsuarioService usuarioService) {
+    public AuthController(
+            AuthenticationManager authenticationManager,
+            JwtUtil jwtUtil,
+            UserDetailsService userDetailsService,
+            UsuarioRepository usuarioRepository,
+            UsuarioService usuarioService
+    ) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
@@ -43,7 +48,9 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) {
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password())
+                    new UsernamePasswordAuthenticationToken(
+                            authRequest.username(), authRequest.password()
+                    )
             );
         } catch (BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -53,15 +60,14 @@ public class AuthController {
                     .body(new AuthResponse(null, "Error interno de autenticación"));
         }
 
-        // cargar detalles vía UserDetailsService
         UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.username());
 
-        Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(authRequest.username());
-        if (usuarioOptional.isEmpty()) {
+        Optional<Usuario> maybeUsuario = usuarioRepository.findByUsername(authRequest.username());
+        if (maybeUsuario.isEmpty()) {
             return ResponseEntity.badRequest().body(new AuthResponse(null, "Usuario no encontrado"));
         }
 
-        String role = usuarioOptional.get().getRoles().stream()
+        String role = maybeUsuario.get().getRoles().stream()
                 .findFirst()
                 .map(rol -> rol.getNombre().name()) // "ADMIN" / "USER"
                 .orElse("USER");
@@ -78,13 +84,13 @@ public class AuthController {
                     .body(new AuthResponse(null, "Error: Email o contraseña no pueden estar vacíos."));
         }
 
-        // crea usuario (hash dentro del service)
+        // crea el usuario (con rol USER)
         Usuario usuario = usuarioService.crearUsuario(request.username(), request.password());
 
-        // cargar detalles vía UserDetailsService (NO desde UsuarioService)
+        // OBTÉN los UserDetails con el UserDetailsService real, no con UsuarioService
         UserDetails userDetails = userDetailsService.loadUserByUsername(usuario.getUsername());
 
         String token = jwtUtil.generateToken(userDetails, "USER");
-        return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(token, "USER"));
+        return ResponseEntity.ok(new AuthResponse(token, "USER"));
     }
 }
