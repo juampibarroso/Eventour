@@ -1,9 +1,9 @@
 package com.eventour.eventour.model;
 
 public enum Localidad {
-    SAN_RAFAEL(Oasis.ZONA_SUR),
-    GENERAL_ALVEAR(Oasis.ZONA_SUR),
-    MALARGÜE(Oasis.ZONA_SUR),
+    SAN_RAFAEL(Oasis.OASIS_SUR),
+    GENERAL_ALVEAR(Oasis.OASIS_SUR),
+    MALARGÜE(Oasis.OASIS_SUR),
 
     CAPITAL(Oasis.GRAN_MENDOZA),
     GODOY_CRUZ(Oasis.GRAN_MENDOZA),
