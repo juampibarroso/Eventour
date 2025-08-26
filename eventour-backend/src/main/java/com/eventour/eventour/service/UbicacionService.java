@@ -71,7 +71,7 @@ public class UbicacionService {
                 ubicacion.getNombre(),
                 ubicacion.getDireccion(),
                 ubicacion.getLocalidad(),
-                ubicacion.getOasis().name(),
+                ubicacion.getOasis(),
                 ubicacion.getLatitud(),
                 ubicacion.getLongitud()
         );
