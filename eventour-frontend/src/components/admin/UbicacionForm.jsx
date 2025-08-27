@@ -53,6 +53,8 @@ const UbicacionForm = () => {
     try {
       const token = localStorage.getItem("token"); // token guardado al loguear
 
+      console.log("Ubicación que se envía:", JSON.stringify(ubicacion, null, 2));
+
       await axios.post(`${API}/ubicaciones`, ubicacion, {
         headers: {
           "Content-Type": "application/json",
