@@ -1,13 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { GoogleMap, Marker, LoadScript, Autocomplete } from "@react-google-maps/api";
 import axios from "axios";
 import "../../styles/UbicacionForm.css";
 import { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_LIBRARIES } from "../../config/googleMapsConfig";
 
-
-
 const API = import.meta.env.VITE_API_URL;
-
 
 const mapContainerStyle = {
   width: "100%",
@@ -22,7 +19,6 @@ const UbicacionForm = () => {
     nombre: "",
     direccion: "",
     oasis: "",
-    localidad: "",
     latitud: null,
     longitud: null,
   });
@@ -30,14 +26,21 @@ const UbicacionForm = () => {
   const [mapCenter, setMapCenter] = useState({ lat: -32.889458, lng: -68.845839 }); // Mendoza
   const autocompleteRef = useRef(null);
 
+  // Maneja cambios en inputs/select
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setUbicacion((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Cuando el usuario elige una dirección de Google
   const handlePlaceChanged = () => {
-    const place = autocompleteRef.current.getPlace();
-    if (place.geometry) {
+    const place = autocompleteRef.current?.getPlace();
+    if (place?.geometry) {
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
       setUbicacion((prev) => ({
         ...prev,
-        direccion: place.formatted_address,
+        direccion: place.formatted_address || prev.direccion,
         latitud: lat,
         longitud: lng,
       }));
@@ -47,14 +50,13 @@ const UbicacionForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const token = localStorage.getItem("token"); // 👉 leemos el token guardado al loguear
+      const token = localStorage.getItem("token"); // token guardado al loguear
 
       await axios.post(`${API}/ubicaciones`, ubicacion, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // 👉 mandamos el token
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -63,7 +65,6 @@ const UbicacionForm = () => {
         nombre: "",
         direccion: "",
         oasis: "",
-        localidad: "",
         latitud: null,
         longitud: null,
       });
@@ -73,10 +74,10 @@ const UbicacionForm = () => {
     }
   };
 
-
   return (
     <div className="ubicacion-form-container">
       <h2>Cargar Nueva Ubicación</h2>
+
       <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={GOOGLE_MAPS_LIBRARIES}>
         <form className="ubicacion-form" onSubmit={handleSubmit}>
           <input
@@ -101,21 +102,22 @@ const UbicacionForm = () => {
                 border: "none",
                 marginBottom: "10px",
               }}
+              // Permitir escribir manualmente si no se usa el Autocomplete
+              onChange={(e) => setUbicacion((p) => ({ ...p, direccion: e.target.value }))}
+              value={ubicacion.direccion}
             />
           </Autocomplete>
 
+          {/* OASIS: usa EXACTAMENTE los valores del enum del backend */}
           <select name="oasis" value={ubicacion.oasis} onChange={handleChange} required>
             <option value="">Seleccionar ZONA.</option>
-            <option value="ZONA_SUR">Zona Sur</option>
-            <option value="VALLE_DE_UCO">Valle de Uco</option>
-            <option value="GRAN_MENDOZA">Gran Mendoza</option>
             <option value="ZONA_ESTE">Zona Este</option>
+            <option value="GRAN_MENDOZA">Gran Mendoza</option>
+            <option value="VALLE_DE_UCO">Valle de Uco</option>
+            <option value="OASIS_SUR">Zona Sur</option>
           </select>
 
-
-
           <button type="submit">Guardar Ubicación</button>
-
         </form>
 
         {/* Vista previa del mapa */}
