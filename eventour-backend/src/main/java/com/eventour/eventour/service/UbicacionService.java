@@ -26,6 +26,8 @@ public class UbicacionService {
         return mapToDTO(saved);
     }
 
+    
+
     // Listar todas las ubicaciones
     public List<UbicacionDTO> listarUbicaciones() {
         return ubicacionRepository.findAll()
