@@ -45,28 +45,34 @@ const UbicacionForm = () => {
     }
   };
 
-  const handleChange = (e) => {
-    setUbicacion({ ...ubicacion, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await axios.post(`${API}/ubicaciones`, ubicacion);
+      const token = localStorage.getItem("token"); // 👉 leemos el token guardado al loguear
+
+      await axios.post(`${API}/ubicaciones`, ubicacion, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // 👉 mandamos el token
+        },
+      });
 
       alert("✅ Ubicación guardada correctamente");
       setUbicacion({
         nombre: "",
         direccion: "",
         oasis: "",
+        localidad: "",
         latitud: null,
         longitud: null,
       });
     } catch (error) {
-      console.error("Error al guardar ubicación", error);
+      console.error("Error al guardar ubicación", error.response?.data || error.message);
       alert("❌ Error al guardar ubicación");
     }
   };
+
 
   return (
     <div className="ubicacion-form-container">
@@ -106,10 +112,10 @@ const UbicacionForm = () => {
             <option value="ZONA_ESTE">Zona Este</option>
           </select>
 
-          
+
 
           <button type="submit">Guardar Ubicación</button>
-          
+
         </form>
 
         {/* Vista previa del mapa */}
