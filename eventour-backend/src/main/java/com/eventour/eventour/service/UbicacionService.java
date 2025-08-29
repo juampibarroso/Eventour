@@ -1,14 +1,15 @@
 package com.eventour.eventour.service;
 
 import com.eventour.eventour.dto.UbicacionDTO;
+import com.eventour.eventour.model.Localidad;
 import com.eventour.eventour.model.Oasis;
 import com.eventour.eventour.model.Ubicacion;
 import com.eventour.eventour.repository.UbicacionRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,86 +21,53 @@ public class UbicacionService {
         this.ubicacionRepository = ubicacionRepository;
     }
 
-    // ---------- Crear desde Map (robusto) ----------
-    public UbicacionDTO crearDesdeMapa(Map<String, Object> body) {
-        Ubicacion entity = mapFromMap(body, new Ubicacion());
-        Ubicacion saved = ubicacionRepository.save(entity);
+    // Crear
+    public UbicacionDTO crearUbicacion(UbicacionDTO dto) {
+        Ubicacion u = mapToEntity(dto);
+        Ubicacion saved = ubicacionRepository.save(u);
         return mapToDTO(saved);
     }
 
-    // ---------- Actualizar desde Map (robusto) ----------
-    public UbicacionDTO actualizarDesdeMapa(Long id, Map<String, Object> body) {
-        Ubicacion entity = ubicacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con ID: " + id));
-        mapFromMap(body, entity);
-        Ubicacion saved = ubicacionRepository.save(entity);
-        return mapToDTO(saved);
-    }
-
-    // ---------- Helpers de mapeo ----------
-    private Ubicacion mapFromMap(Map<String, Object> body, Ubicacion target) {
-        String nombre    = asString(body.get("nombre"));
-        String direccion = asString(body.get("direccion"));
-        String localidad = asString(body.get("localidad")); // opcional
-        String oasisStr  = asString(body.get("oasis"));
-        Double latitud   = asDouble(body.get("latitud"));
-        Double longitud  = asDouble(body.get("longitud"));
-
-        if (oasisStr == null || oasisStr.isBlank()) {
-            throw new IllegalArgumentException("Debe enviar 'oasis' (GRAN_MENDOZA|VALLE_DE_UCO|ZONA_ESTE|OASIS_SUR).");
-        }
-
-        Oasis oasis;
-        try {
-            oasis = Oasis.valueOf(oasisStr.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException(
-                    "Valor de 'oasis' inválido: " + oasisStr +
-                    ". Use GRAN_MENDOZA|VALLE_DE_UCO|ZONA_ESTE|OASIS_SUR."
-            );
-        }
-
-        target.setNombre(nombre);
-        target.setDireccion(direccion);
-        target.setLocalidad(localidad);
-        target.setOasis(oasis);
-        target.setLatitud(latitud);
-        target.setLongitud(longitud);
-
-        return target;
-    }
-
-    private static String asString(Object v) {
-        return v == null ? null : String.valueOf(v).trim();
-    }
-
-    private static Double asDouble(Object v) {
-        if (v == null) return null;
-        if (v instanceof Number n) return n.doubleValue();
-        return Double.valueOf(String.valueOf(v));
-    }
-
-    // ---------- Resto de operaciones ----------
+    // Listar
     public List<UbicacionDTO> listarUbicaciones() {
         return ubicacionRepository.findAll()
-                .stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+                .stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
+    // Obtener por ID
     public UbicacionDTO obtenerUbicacionPorId(Long id) {
         Ubicacion u = ubicacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ubicación no encontrada: " + id));
         return mapToDTO(u);
     }
 
+    // Actualizar
+    public UbicacionDTO actualizarUbicacion(Long id, UbicacionDTO dto) {
+        Ubicacion u = ubicacionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ubicación no encontrada: " + id));
+
+        u.setNombre(dto.nombre());
+        u.setDireccion(dto.direccion());
+        u.setLocalidad(dto.localidad());
+
+        Oasis oasis = resolveOasis(dto);
+        u.setOasis(oasis);
+
+        u.setLatitud(dto.latitud());
+        u.setLongitud(dto.longitud());
+
+        return mapToDTO(ubicacionRepository.save(u));
+    }
+
+    // Eliminar
     public void eliminarUbicacion(Long id) {
         if (!ubicacionRepository.existsById(id)) {
-            throw new RuntimeException("Ubicación no encontrada con ID: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ubicación no encontrada: " + id);
         }
         ubicacionRepository.deleteById(id);
     }
 
+    // ==== mapping ====
     private UbicacionDTO mapToDTO(Ubicacion u) {
         return new UbicacionDTO(
                 u.getId(),
@@ -110,5 +78,33 @@ public class UbicacionService {
                 u.getLatitud(),
                 u.getLongitud()
         );
+    }
+
+    private Ubicacion mapToEntity(UbicacionDTO dto) {
+        Oasis oasis = resolveOasis(dto);
+
+        return new Ubicacion(
+                dto.nombre(),
+                dto.direccion(),
+                dto.localidad(),
+                oasis,
+                dto.latitud(),
+                dto.longitud()
+        );
+    }
+
+    private Oasis resolveOasis(UbicacionDTO dto) {
+        if (dto.oasis() != null) {
+            return dto.oasis(); // usa lo que envía el front (enum válido)
+        }
+        // Si NO querés deducir por localidad, descomentá la siguiente línea:
+        // throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe enviar 'oasis' (GRAN_MENDOZA|VALLE_DE_UCO|ZONA_ESTE|OASIS_SUR)");
+
+        // Si querés intentar deducir:
+        if (dto.localidad() != null && !dto.localidad().isBlank()) {
+            Localidad loc = Localidad.valueOf(dto.localidad().toUpperCase().replace(" ", "_"));
+            return loc.getOasis();
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe enviar 'oasis' o 'localidad' válida");
     }
 }

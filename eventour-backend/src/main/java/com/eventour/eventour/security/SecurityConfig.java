@@ -19,8 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
-import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -32,7 +30,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthenticationFilter,
-            @Lazy UserDetailsService userDetailsService) {
+                          @Lazy UserDetailsService userDetailsService) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
     }
@@ -45,7 +43,8 @@ public class SecurityConfig {
                 "https://eventour.com.ar",
                 "https://www.eventour.com.ar",
                 "http://localhost:*",
-                "http://127.0.0.1:*"));
+                "http://127.0.0.1:*"
+        ));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -65,26 +64,26 @@ public class SecurityConfig {
 
                         // Público
                         .requestMatchers("/error", "/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll() // login/register abiertos
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        // Lecturas públicas
                         .requestMatchers(HttpMethod.GET,
                                 "/api/eventos/**",
                                 "/api/ubicaciones/**")
                         .permitAll()
 
-                        // Mutaciones solo ADMIN
+                        // Mutaciones SOLO ADMIN (requiere ROLE_ADMIN en el JWT)
                         .requestMatchers(HttpMethod.POST,
                                 "/api/eventos/**",
                                 "/api/ubicaciones/**")
-                        .hasRole("ADMIN") // requiere ROLE_ADMIN en el token
+                        .hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
 
-                        // Lo demás, autenticado
-                        .anyRequest().authenticated())
-
-                // si tenés el filtro JWT y no te está bloqueando rutas públicas, añadilo aquí:
+                        // Resto autenticado
+                        .anyRequest().authenticated()
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-
                 .build();
     }
 
