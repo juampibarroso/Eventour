@@ -4,11 +4,18 @@ import com.eventour.eventour.dto.UbicacionDTO;
 import com.eventour.eventour.service.UbicacionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
+
+
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/ubicaciones")
+@RequestMapping(
+  value = "/api/ubicaciones",
+  produces = MediaType.APPLICATION_JSON_VALUE
+)
 public class UbicacionController {
 
     private final UbicacionService ubicacionService;
@@ -18,7 +25,7 @@ public class UbicacionController {
     }
 
     //crear ubicacion
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UbicacionDTO> crearUbicacion(@RequestBody UbicacionDTO ubicacionDTO){
         UbicacionDTO nuevaUbicacion = ubicacionService.crearUbicacion(ubicacionDTO);
         return ResponseEntity.ok(nuevaUbicacion);
@@ -60,6 +67,14 @@ public class UbicacionController {
     public ResponseEntity<List<UbicacionDTO>> filtrarPorLocalidad(@RequestParam String localidad) {
         return ResponseEntity.ok(ubicacionService.filtrarPorLocalidad(localidad));
     }
+
+
+    @PostMapping(path="/_echo", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> echo(@RequestBody Map<String, Object> body) {
+    System.out.println("ECHO BODY -> " + body);
+    return ResponseEntity.ok(body);
+}
+
 
 
 

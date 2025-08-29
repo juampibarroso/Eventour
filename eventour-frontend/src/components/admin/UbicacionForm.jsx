@@ -55,9 +55,10 @@ const UbicacionForm = () => {
 
       console.log("Ubicación que se envía:", JSON.stringify(ubicacion, null, 2));
 
-      await axios.post(`${API}/ubicaciones`, ubicacion, {
+      
+      await axios.post(`${API}/ubicaciones`, JSON.stringify(ubicacion), {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${token}`,
         },
       });
