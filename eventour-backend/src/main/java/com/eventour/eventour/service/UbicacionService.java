@@ -1,13 +1,9 @@
 package com.eventour.eventour.service;
 
 import com.eventour.eventour.dto.UbicacionDTO;
-import com.eventour.eventour.model.Localidad;
-import com.eventour.eventour.model.Oasis;
 import com.eventour.eventour.model.Ubicacion;
 import com.eventour.eventour.repository.UbicacionRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,88 +19,71 @@ public class UbicacionService {
 
     // Crear
     public UbicacionDTO crearUbicacion(UbicacionDTO dto) {
-        Ubicacion u = mapToEntity(dto);
-        Ubicacion saved = ubicacionRepository.save(u);
-        return mapToDTO(saved);
+        Ubicacion entity = toEntity(dto);
+        Ubicacion saved = ubicacionRepository.save(entity);
+        return toDTO(saved);
     }
 
     // Listar
     public List<UbicacionDTO> listarUbicaciones() {
         return ubicacionRepository.findAll()
-                .stream().map(this::mapToDTO).collect(Collectors.toList());
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
-    // Obtener por ID
+    // Obtener por id
     public UbicacionDTO obtenerUbicacionPorId(Long id) {
-        Ubicacion u = ubicacionRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ubicación no encontrada: " + id));
-        return mapToDTO(u);
+        Ubicacion entity = ubicacionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada id=" + id));
+        return toDTO(entity);
     }
 
     // Actualizar
     public UbicacionDTO actualizarUbicacion(Long id, UbicacionDTO dto) {
-        Ubicacion u = ubicacionRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ubicación no encontrada: " + id));
+        Ubicacion entity = ubicacionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada id=" + id));
 
-        u.setNombre(dto.nombre());
-        u.setDireccion(dto.direccion());
-        u.setLocalidad(dto.localidad());
+        if (dto.nombre() != null) entity.setNombre(dto.nombre());
+        if (dto.direccion() != null) entity.setDireccion(dto.direccion());
+        if (dto.localidad() != null) entity.setLocalidad(dto.localidad());
+        if (dto.oasis() != null) entity.setOasis(dto.oasis());
+        if (dto.latitud() != null) entity.setLatitud(dto.latitud());
+        if (dto.longitud() != null) entity.setLongitud(dto.longitud());
 
-        Oasis oasis = resolveOasis(dto);
-        u.setOasis(oasis);
-
-        u.setLatitud(dto.latitud());
-        u.setLongitud(dto.longitud());
-
-        return mapToDTO(ubicacionRepository.save(u));
+        Ubicacion updated = ubicacionRepository.save(entity);
+        return toDTO(updated);
     }
 
     // Eliminar
     public void eliminarUbicacion(Long id) {
         if (!ubicacionRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ubicación no encontrada: " + id);
+            throw new RuntimeException("Ubicación no encontrada id=" + id);
         }
         ubicacionRepository.deleteById(id);
     }
 
-    // ==== mapping ====
-    private UbicacionDTO mapToDTO(Ubicacion u) {
+    // ---------- mapping ----------
+    private UbicacionDTO toDTO(Ubicacion e) {
         return new UbicacionDTO(
-                u.getId(),
-                u.getNombre(),
-                u.getDireccion(),
-                u.getLocalidad(),
-                u.getOasis(),
-                u.getLatitud(),
-                u.getLongitud()
+                e.getId(),
+                e.getNombre(),
+                e.getDireccion(),
+                e.getLocalidad(),
+                e.getOasis(),
+                e.getLatitud(),
+                e.getLongitud()
         );
     }
 
-    private Ubicacion mapToEntity(UbicacionDTO dto) {
-        Oasis oasis = resolveOasis(dto);
-
-        return new Ubicacion(
-                dto.nombre(),
-                dto.direccion(),
-                dto.localidad(),
-                oasis,
-                dto.latitud(),
-                dto.longitud()
-        );
-    }
-
-    private Oasis resolveOasis(UbicacionDTO dto) {
-        if (dto.oasis() != null) {
-            return dto.oasis(); // usa lo que envía el front (enum válido)
-        }
-        // Si NO querés deducir por localidad, descomentá la siguiente línea:
-        // throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe enviar 'oasis' (GRAN_MENDOZA|VALLE_DE_UCO|ZONA_ESTE|OASIS_SUR)");
-
-        // Si querés intentar deducir:
-        if (dto.localidad() != null && !dto.localidad().isBlank()) {
-            Localidad loc = Localidad.valueOf(dto.localidad().toUpperCase().replace(" ", "_"));
-            return loc.getOasis();
-        }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe enviar 'oasis' o 'localidad' válida");
+    private Ubicacion toEntity(UbicacionDTO d) {
+        Ubicacion e = new Ubicacion();
+        e.setNombre(d.nombre());
+        e.setDireccion(d.direccion());
+        e.setLocalidad(d.localidad()); // puede venir null
+        e.setOasis(d.oasis());         // **requerido** por el controller
+        e.setLatitud(d.latitud());
+        e.setLongitud(d.longitud());
+        return e;
     }
 }
