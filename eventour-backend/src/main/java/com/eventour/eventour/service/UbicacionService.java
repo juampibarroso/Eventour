@@ -5,7 +5,9 @@ import com.eventour.eventour.model.Localidad;
 import com.eventour.eventour.model.Oasis;
 import com.eventour.eventour.model.Ubicacion;
 import com.eventour.eventour.repository.UbicacionRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,8 +27,6 @@ public class UbicacionService {
         Ubicacion saved = ubicacionRepository.save(ubicacion);
         return mapToDTO(saved);
     }
-
-    
 
     // Listar todas las ubicaciones
     public List<UbicacionDTO> listarUbicaciones() {
@@ -50,9 +50,13 @@ public class UbicacionService {
 
         ubicacion.setNombre(ubicacionDTO.nombre());
         ubicacion.setDireccion(ubicacionDTO.direccion());
-        ubicacion.setLocalidad(ubicacionDTO.localidad()); // ✅ corregido
+        ubicacion.setLocalidad(ubicacionDTO.localidad());
         ubicacion.setLatitud(ubicacionDTO.latitud());
         ubicacion.setLongitud(ubicacionDTO.longitud());
+
+        // ✅ actualizar oasis
+        Oasis oasis = resolveOasis(ubicacionDTO);
+        ubicacion.setOasis(oasis);
 
         Ubicacion updated = ubicacionRepository.save(ubicacion);
         return mapToDTO(updated);
@@ -93,7 +97,6 @@ public class UbicacionService {
                 .toList();
     }
 
-
     public List<UbicacionDTO> filtrarPorOasisYLocalidad(String oasis, String localidad) {
         return ubicacionRepository
                 .findByOasisAndLocalidad(Oasis.valueOf(oasis.toUpperCase()), localidad.toUpperCase())
@@ -102,27 +105,41 @@ public class UbicacionService {
                 .toList();
     }
 
+    // ---- Helpers ----
 
-    // Mapear DTO -> entidad
-    private Ubicacion mapToEntity(UbicacionDTO ubicacionDTO) {
-        Localidad localidadEnum = Localidad.valueOf(ubicacionDTO.localidad().toUpperCase().replace(" ", "_"));
-        Oasis oasis = localidadEnum.getOasis();
-
-        return new Ubicacion(
-                ubicacionDTO.nombre(),
-                ubicacionDTO.direccion(),
-                ubicacionDTO.localidad(),
-                oasis,
-                ubicacionDTO.latitud(),
-                ubicacionDTO.longitud()
+    // ✅ Resolver oasis dando prioridad al campo 'oasis' del DTO; si no viene, deducir desde 'localidad'
+    private Oasis resolveOasis(UbicacionDTO dto) {
+        if (dto.oasis() != null) {
+            return dto.oasis();
+        }
+        if (dto.localidad() != null && !dto.localidad().isBlank()) {
+            try {
+                Localidad localidadEnum = Localidad.valueOf(dto.localidad().toUpperCase().replace(" ", "_"));
+                return localidadEnum.getOasis();
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Localidad inválida: " + dto.localidad()
+                );
+            }
+        }
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Debe enviar 'oasis' (GRAN_MENDOZA|VALLE_DE_UCO|ZONA_ESTE|OASIS_SUR) o una 'localidad' válida"
         );
     }
+
+    // Mapear DTO -> entidad
+    private Ubicacion mapToEntity(UbicacionDTO dto) {
+        Oasis oasis = resolveOasis(dto);
+
+        Ubicacion u = new Ubicacion();
+        u.setNombre(dto.nombre());
+        u.setDireccion(dto.direccion());
+        u.setLocalidad(dto.localidad());
+        u.setOasis(oasis);
+        u.setLatitud(dto.latitud());
+        u.setLongitud(dto.longitud());
+        return u;
+    }
 }
-
-
-
-
-
-
-
-
