@@ -2,14 +2,17 @@ package com.eventour.eventour.controller;
 
 import com.eventour.eventour.dto.UbicacionDTO;
 import com.eventour.eventour.service.UbicacionService;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.MediaType;
 
-
-
+import java.io.BufferedReader;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(
@@ -22,10 +25,44 @@ public class UbicacionController {
 
     public UbicacionController(UbicacionService ubicacionService){
         this.ubicacionService = ubicacionService;
+
+
     }
 
+    // --------- PROBE: leer body crudo en esta ruta exacta -----------
+    @PostMapping("/_probe")
+    public ResponseEntity<String> probe(HttpServletRequest request) throws Exception {
+        String body;
+        try (BufferedReader br = request.getReader()) {
+            body = br.lines().collect(Collectors.joining("\n"));
+        }
+        String ct = request.getContentType();
+        return ResponseEntity.ok("len=" + body.length() + " | ct=" + ct + " | body=" + body);
+    }
+
+    // --------- ALTERNATIVA: recibir Map y mapear a DTO --------------
+    @PostMapping("/_create")
+    public ResponseEntity<UbicacionDTO> crearDesdeMap(@RequestBody Map<String, Object> payload) {
+        // Map -> DTO
+        UbicacionDTO dto = new UbicacionDTO(
+                null,
+                (String) payload.get("nombre"),
+                (String) payload.get("direccion"),
+                (String) payload.getOrDefault("localidad", null),
+                // oasis puede venir como String; lo convertimos en el service
+                null,
+                payload.get("latitud") == null ? null : Double.valueOf(payload.get("latitud").toString()),
+                payload.get("longitud") == null ? null : Double.valueOf(payload.get("longitud").toString())
+        );
+        // Nota: el Oasis real lo resuelve el service con resolveOasis(dto)
+        UbicacionDTO nueva = ubicacionService.crearUbicacion(dto);
+        return ResponseEntity.ok(nueva);
+    }
+
+
+
     //crear ubicacion
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
     public ResponseEntity<UbicacionDTO> crearUbicacion(@RequestBody UbicacionDTO ubicacionDTO){
         UbicacionDTO nuevaUbicacion = ubicacionService.crearUbicacion(ubicacionDTO);
         return ResponseEntity.ok(nuevaUbicacion);
