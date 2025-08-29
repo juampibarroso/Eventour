@@ -1,131 +1,63 @@
 package com.eventour.eventour.controller;
 
 import com.eventour.eventour.dto.UbicacionDTO;
-import com.eventour.eventour.model.Oasis;
 import com.eventour.eventour.service.UbicacionService;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.BufferedReader;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/ubicaciones")
+@RequestMapping(value = "/api/ubicaciones", produces = MediaType.APPLICATION_JSON_VALUE)
 public class UbicacionController {
 
     private final UbicacionService ubicacionService;
-    private final ObjectMapper objectMapper;
 
-    public UbicacionController(UbicacionService ubicacionService, ObjectMapper objectMapper) {
+    public UbicacionController(UbicacionService ubicacionService) {
         this.ubicacionService = ubicacionService;
-        this.objectMapper = objectMapper;
     }
 
-    // ---------- Utilidades de diagnóstico ----------
-    @PostMapping("/_probe")
-    public ResponseEntity<String> probe(HttpServletRequest request) throws Exception {
-        String body;
-        try (BufferedReader br = request.getReader()) {
-            body = br.lines().collect(Collectors.joining("\n"));
-        }
-        String ct = request.getContentType();
-        return ResponseEntity.ok("len=" + body.length() + " | ct=" + ct + " | body=" + body);
+    // --- Crear (robusto: parseamos el JSON manualmente desde Map)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UbicacionDTO> crear(@RequestBody Map<String, Object> body) {
+        UbicacionDTO creada = ubicacionService.crearDesdeMapa(body);
+        return ResponseEntity.ok(creada);
     }
 
-    @PostMapping(path = "/_echo", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> echo(@RequestBody Map<String, Object> body) {
-        System.out.println("ECHO BODY -> " + body);
-        return ResponseEntity.ok(body);
-    }
-
-    @PostMapping("/_createRaw")
-    public ResponseEntity<UbicacionDTO> crearDesdeRaw(@RequestBody String body) throws Exception {
-        Map<String, Object> payload = objectMapper.readValue(body, new TypeReference<Map<String, Object>>() {});
-        UbicacionDTO dto = mapPayloadToDto(payload);
-        UbicacionDTO nueva = ubicacionService.crearUbicacion(dto);
-        return ResponseEntity.ok(nueva);
-    }
-
-    // ---------- Endpoint real ----------
-    @PostMapping
-    public ResponseEntity<UbicacionDTO> crearUbicacion(@RequestBody String body) throws Exception {
-        Map<String, Object> payload = objectMapper.readValue(body, new TypeReference<Map<String, Object>>() {});
-        UbicacionDTO dto = mapPayloadToDto(payload);
-        UbicacionDTO nueva = ubicacionService.crearUbicacion(dto);
-        return ResponseEntity.ok(nueva);
-    }
-
-    // ---------- Lectura ----------
+    // --- Listar
     @GetMapping
-    public ResponseEntity<List<UbicacionDTO>> listarUbicaciones() {
+    public ResponseEntity<List<UbicacionDTO>> listar() {
         return ResponseEntity.ok(ubicacionService.listarUbicaciones());
     }
 
+    // --- Obtener por ID
     @GetMapping("/{id}")
-    public ResponseEntity<UbicacionDTO> obtenerUbicacionPorId(@PathVariable Long id) {
+    public ResponseEntity<UbicacionDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(ubicacionService.obtenerUbicacionPorId(id));
     }
 
-    // ---------- Actualización ----------
-    @PutMapping("/{id}")
-    public ResponseEntity<UbicacionDTO> actualizarUbicacion(@PathVariable Long id,
-                                                            @RequestBody UbicacionDTO ubicacionDTO) {
-        return ResponseEntity.ok(ubicacionService.actualizarUbicacion(id, ubicacionDTO));
+    // --- Actualizar (también desde Map para mantener la robustez)
+    @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UbicacionDTO> actualizar(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body
+    ) {
+        UbicacionDTO actualizada = ubicacionService.actualizarDesdeMapa(id, body);
+        return ResponseEntity.ok(actualizada);
     }
 
-    // ---------- Eliminación ----------
+    // --- Eliminar
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarUbicacion(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         ubicacionService.eliminarUbicacion(id);
         return ResponseEntity.noContent().build();
     }
 
-    // ---------- Filtros ----------
-    @GetMapping("/filtrar/oasis")
-    public ResponseEntity<List<UbicacionDTO>> filtrarPorOasis(@RequestParam String oasis) {
-        return ResponseEntity.ok(ubicacionService.filtrarPorOasis(oasis));
-    }
-
-    @GetMapping("/filtrar/localidad")
-    public ResponseEntity<List<UbicacionDTO>> filtrarPorLocalidad(@RequestParam String localidad) {
-        return ResponseEntity.ok(ubicacionService.filtrarPorLocalidad(localidad));
-    }
-
-    // ---------- Helpers de mapeo ----------
-    private UbicacionDTO mapPayloadToDto(Map<String, Object> payload) {
-        String nombre     = getStr(payload, "nombre");
-        String direccion  = getStr(payload, "direccion");
-        String localidad  = getStr(payload, "localidad");
-
-        Oasis oasis = null;
-        String oasisStr = getStr(payload, "oasis");
-        if (oasisStr != null && !oasisStr.isBlank()) {
-            oasis = Oasis.valueOf(oasisStr.toUpperCase());
-        }
-
-        Double latitud  = getDouble(payload, "latitud");
-        Double longitud = getDouble(payload, "longitud");
-
-        return new UbicacionDTO(null, nombre, direccion, localidad, oasis, latitud, longitud);
-    }
-
-    private String getStr(Map<String, Object> map, String key) {
-        Object v = map.get(key);
-        return v == null ? null : v.toString();
-    }
-
-    private Double getDouble(Map<String, Object> map, String key) {
-        Object v = map.get(key);
-        if (v == null) return null;
-        if (v instanceof Number n) return n.doubleValue();
-        return Double.valueOf(v.toString());
+    // --- (Opcional) eco para depurar rápidamente
+    @PostMapping(path = "/_echo", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> echo(@RequestBody Map<String, Object> body) {
+        return body;
     }
 }

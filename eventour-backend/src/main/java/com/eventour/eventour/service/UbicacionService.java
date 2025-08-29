@@ -1,13 +1,14 @@
 package com.eventour.eventour.service;
 
 import com.eventour.eventour.dto.UbicacionDTO;
-import com.eventour.eventour.model.Localidad;
 import com.eventour.eventour.model.Oasis;
 import com.eventour.eventour.model.Ubicacion;
 import com.eventour.eventour.repository.UbicacionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,14 +20,66 @@ public class UbicacionService {
         this.ubicacionRepository = ubicacionRepository;
     }
 
-    // ---------- Crear ----------
-    public UbicacionDTO crearUbicacion(UbicacionDTO dto) {
-        Ubicacion entity = mapToEntity(dto);
+    // ---------- Crear desde Map (robusto) ----------
+    public UbicacionDTO crearDesdeMapa(Map<String, Object> body) {
+        Ubicacion entity = mapFromMap(body, new Ubicacion());
         Ubicacion saved = ubicacionRepository.save(entity);
         return mapToDTO(saved);
     }
 
-    // ---------- Listar ----------
+    // ---------- Actualizar desde Map (robusto) ----------
+    public UbicacionDTO actualizarDesdeMapa(Long id, Map<String, Object> body) {
+        Ubicacion entity = ubicacionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con ID: " + id));
+        mapFromMap(body, entity);
+        Ubicacion saved = ubicacionRepository.save(entity);
+        return mapToDTO(saved);
+    }
+
+    // ---------- Helpers de mapeo ----------
+    private Ubicacion mapFromMap(Map<String, Object> body, Ubicacion target) {
+        String nombre    = asString(body.get("nombre"));
+        String direccion = asString(body.get("direccion"));
+        String localidad = asString(body.get("localidad")); // opcional
+        String oasisStr  = asString(body.get("oasis"));
+        Double latitud   = asDouble(body.get("latitud"));
+        Double longitud  = asDouble(body.get("longitud"));
+
+        if (oasisStr == null || oasisStr.isBlank()) {
+            throw new IllegalArgumentException("Debe enviar 'oasis' (GRAN_MENDOZA|VALLE_DE_UCO|ZONA_ESTE|OASIS_SUR).");
+        }
+
+        Oasis oasis;
+        try {
+            oasis = Oasis.valueOf(oasisStr.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(
+                    "Valor de 'oasis' inválido: " + oasisStr +
+                    ". Use GRAN_MENDOZA|VALLE_DE_UCO|ZONA_ESTE|OASIS_SUR."
+            );
+        }
+
+        target.setNombre(nombre);
+        target.setDireccion(direccion);
+        target.setLocalidad(localidad);
+        target.setOasis(oasis);
+        target.setLatitud(latitud);
+        target.setLongitud(longitud);
+
+        return target;
+    }
+
+    private static String asString(Object v) {
+        return v == null ? null : String.valueOf(v).trim();
+    }
+
+    private static Double asDouble(Object v) {
+        if (v == null) return null;
+        if (v instanceof Number n) return n.doubleValue();
+        return Double.valueOf(String.valueOf(v));
+    }
+
+    // ---------- Resto de operaciones ----------
     public List<UbicacionDTO> listarUbicaciones() {
         return ubicacionRepository.findAll()
                 .stream()
@@ -34,39 +87,12 @@ public class UbicacionService {
                 .collect(Collectors.toList());
     }
 
-    // ---------- Obtener por ID ----------
     public UbicacionDTO obtenerUbicacionPorId(Long id) {
-        Ubicacion ubicacion = ubicacionRepository.findById(id)
+        Ubicacion u = ubicacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con ID: " + id));
-        return mapToDTO(ubicacion);
+        return mapToDTO(u);
     }
 
-    // ---------- Actualizar ----------
-    public UbicacionDTO actualizarUbicacion(Long id, UbicacionDTO dto) {
-        Ubicacion ubicacion = ubicacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada con ID: " + id));
-
-        // Permite actualizar nombre/dirección/localidad/lat/long y, si viene, oasis
-        ubicacion.setNombre(dto.nombre());
-        ubicacion.setDireccion(dto.direccion());
-        ubicacion.setLocalidad(dto.localidad());
-        ubicacion.setLatitud(dto.latitud());
-        ubicacion.setLongitud(dto.longitud());
-
-        Oasis oasis = dto.oasis();
-        if (oasis == null && dto.localidad() != null && !dto.localidad().isBlank()) {
-            Localidad locEnum = Localidad.valueOf(dto.localidad().toUpperCase().replace(" ", "_"));
-            oasis = locEnum.getOasis();
-        }
-        if (oasis != null) {
-            ubicacion.setOasis(oasis);
-        }
-
-        Ubicacion updated = ubicacionRepository.save(ubicacion);
-        return mapToDTO(updated);
-    }
-
-    // ---------- Eliminar ----------
     public void eliminarUbicacion(Long id) {
         if (!ubicacionRepository.existsById(id)) {
             throw new RuntimeException("Ubicación no encontrada con ID: " + id);
@@ -74,65 +100,15 @@ public class UbicacionService {
         ubicacionRepository.deleteById(id);
     }
 
-    // ---------- Filtros ----------
-    public List<UbicacionDTO> filtrarPorOasis(String oasis) {
-        return ubicacionRepository.findByOasis(Oasis.valueOf(oasis.toUpperCase()))
-                .stream()
-                .map(this::mapToDTO)
-                .toList();
-    }
-
-    public List<UbicacionDTO> filtrarPorLocalidad(String localidad) {
-        return ubicacionRepository.findByLocalidad(localidad.toUpperCase())
-                .stream()
-                .map(this::mapToDTO)
-                .toList();
-    }
-
-    public List<UbicacionDTO> filtrarPorOasisYLocalidad(String oasis, String localidad) {
-        return ubicacionRepository
-                .findByOasisAndLocalidad(Oasis.valueOf(oasis.toUpperCase()), localidad.toUpperCase())
-                .stream()
-                .map(this::mapToDTO)
-                .toList();
-    }
-
-    // ---------- Mapping ----------
-    private UbicacionDTO mapToDTO(Ubicacion ubicacion) {
+    private UbicacionDTO mapToDTO(Ubicacion u) {
         return new UbicacionDTO(
-                ubicacion.getId(),
-                ubicacion.getNombre(),
-                ubicacion.getDireccion(),
-                ubicacion.getLocalidad(),
-                ubicacion.getOasis(),
-                ubicacion.getLatitud(),
-                ubicacion.getLongitud()
-        );
-    }
-
-    private Ubicacion mapToEntity(UbicacionDTO dto) {
-        // Acepta 'oasis' directo o lo infiere desde 'localidad'
-        Oasis oasis = dto.oasis();
-        String localidad = dto.localidad();
-
-        if (oasis == null && localidad != null && !localidad.isBlank()) {
-            Localidad locEnum = Localidad.valueOf(localidad.toUpperCase().replace(" ", "_"));
-            oasis = locEnum.getOasis();
-        }
-
-        if (oasis == null) {
-            throw new IllegalArgumentException(
-                "Debe enviar 'oasis' (GRAN_MENDOZA|VALLE_DE_UCO|ZONA_ESTE|OASIS_SUR) o una 'localidad' válida"
-            );
-        }
-
-        return new Ubicacion(
-                dto.nombre(),
-                dto.direccion(),
-                localidad,     // puede ser null
-                oasis,
-                dto.latitud(),
-                dto.longitud()
+                u.getId(),
+                u.getNombre(),
+                u.getDireccion(),
+                u.getLocalidad(),
+                u.getOasis(),
+                u.getLatitud(),
+                u.getLongitud()
         );
     }
 }
