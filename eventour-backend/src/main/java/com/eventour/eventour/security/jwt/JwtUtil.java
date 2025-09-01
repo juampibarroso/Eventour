@@ -1,84 +1,79 @@
 package com.eventour.eventour.security.jwt;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
-import java.util.Base64;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 
 @Component
 public class JwtUtil {
 
+    private final SecretKey key;
+    private final long expirationMillis;
 
-
-    @Value("${jwt.secret}") // Leer la clave del archivo application.properties
-    private String secretKey;
-
-    private final long EXPIRATION_TIME = 86400000; // 24 horas
-
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = Base64.getDecoder().decode(secretKey); // Usa la clave desde application.properties
-        return Keys.hmacShaKeyFor(keyBytes);
+    public JwtUtil(
+            @Value("${jwt.secret:a-string-secret-at-least-256-bits-long}") String secret,
+            @Value("${jwt.expiration.millis:86400000}") long expirationMillis) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.expirationMillis = expirationMillis;
     }
 
-    public String generateToken(UserDetails userDetails, String role) {
-        String roleWithPrefix = role.startsWith("ROLE_") ? role : "ROLE_" + role; // ✅ Asegurar el prefijo ROLE_
+    public String generateToken(UserDetails user) {
+        String role = firstAuthority(user.getAuthorities()); // ej: ROLE_ADMIN
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + expirationMillis);
 
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .claim("role", roleWithPrefix) // 🔹 Ahora siempre tendrá ROLE_
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .setSubject(user.getUsername())
+                .addClaims(Map.of("role", role))
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    private String firstAuthority(Collection<? extends GrantedAuthority> auths) {
+        return auths.stream().findFirst().map(GrantedAuthority::getAuthority).orElse("ROLE_USER");
     }
 
     public String getUsernameFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        return parser(token).getBody().getSubject();
     }
 
     public String getRoleFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("role", String.class);
+        Object r = parser(token).getBody().get("role");
+        return r == null ? null : r.toString();
     }
 
-    public UsernamePasswordAuthenticationToken getAuthentication(String token, UserDetails userDetails){
-        List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(getRoleFromToken(token)));
-        return new UsernamePasswordAuthenticationToken(userDetails,null, authorities);
+    public boolean validateToken(String token) {
+        parser(token); // lanza si hay problema
+        return true;
     }
 
-    public String getClaim(String token, String string) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getClaim'");
+    private Jws<Claims> parser(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
     }
+
+    
+
+    // dentro de la clase JwtUtil
+    public UsernamePasswordAuthenticationToken getAuthentication(String token, UserDetails userDetails) {
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities());
+    }
+
 }

@@ -1,24 +1,14 @@
 package com.eventour.eventour.controller;
 
-import com.eventour.eventour.dto.AuthRequest;
-import com.eventour.eventour.dto.AuthResponse;
-import com.eventour.eventour.model.Usuario;
-import com.eventour.eventour.repository.UsuarioRepository;
 import com.eventour.eventour.security.jwt.JwtUtil;
-import com.eventour.eventour.service.UsuarioService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,71 +16,32 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService; // <- tu UserDetailsServiceImpl
-    private final UsuarioRepository usuarioRepository;
-    private final UsuarioService usuarioService;
 
-    public AuthController(
-            AuthenticationManager authenticationManager,
-            JwtUtil jwtUtil,
-            UserDetailsService userDetailsService,
-            UsuarioRepository usuarioRepository,
-            UsuarioService usuarioService
-    ) {
+    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
-        this.userDetailsService = userDetailsService;
-        this.usuarioRepository = usuarioRepository;
-        this.usuarioService = usuarioService;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            authRequest.username(), authRequest.password()
-                    )
-            );
-        } catch (BadCredentialsException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new AuthResponse(null, "Credenciales inválidas"));
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new AuthResponse(null, "Error interno de autenticación"));
-        }
+    public ResponseEntity<?> login(@RequestBody Map<String, String> payload) {
+        String username = payload.get("username");
+        String password = payload.get("password");
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.username());
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password)
+        );
 
-        Optional<Usuario> maybeUsuario = usuarioRepository.findByUsername(authRequest.username());
-        if (maybeUsuario.isEmpty()) {
-            return ResponseEntity.badRequest().body(new AuthResponse(null, "Usuario no encontrado"));
-        }
+        UserDetails user = (UserDetails) auth.getPrincipal();
+        String token = jwtUtil.generateToken(user);     // role = ROLE_...
 
-        String role = maybeUsuario.get().getRoles().stream()
-                .findFirst()
-                .map(rol -> rol.getNombre().name()) // "ADMIN" / "USER"
-                .orElse("USER");
+        String role = jwtUtil.getRoleFromToken(token);  // ROLE_ADMIN
+        String roleSimple = role != null && role.startsWith("ROLE_")
+                ? role.substring("ROLE_".length())
+                : role;
 
-        String token = jwtUtil.generateToken(userDetails, role);
-        return ResponseEntity.ok(new AuthResponse(token, role));
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody AuthRequest request) {
-        if (request.username() == null || request.password() == null
-                || request.username().isEmpty() || request.password().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(new AuthResponse(null, "Error: Email o contraseña no pueden estar vacíos."));
-        }
-
-        // crea el usuario (con rol USER)
-        Usuario usuario = usuarioService.crearUsuario(request.username(), request.password());
-
-        // OBTÉN los UserDetails con el UserDetailsService real, no con UsuarioService
-        UserDetails userDetails = userDetailsService.loadUserByUsername(usuario.getUsername());
-
-        String token = jwtUtil.generateToken(userDetails, "USER");
-        return ResponseEntity.ok(new AuthResponse(token, "USER"));
+        return ResponseEntity.ok(Map.of(
+                "token", token,
+                "role", roleSimple   // ADMIN / USER (por si el front lo muestra)
+        ));
     }
 }
