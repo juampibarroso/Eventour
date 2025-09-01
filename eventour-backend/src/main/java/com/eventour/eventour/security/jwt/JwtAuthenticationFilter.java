@@ -26,25 +26,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
         try {
             String authHeader = request.getHeader("Authorization");
+
+            // Si no hay header Bearer -> continuar
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
+            // Token
             String token = authHeader.substring(7).trim();
             if (token.isEmpty()) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
+            // Username desde el token
             String username;
             try {
                 username = jwtUtil.getUsernameFromToken(token);
@@ -53,24 +56,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            // Si ya hay autenticación -> continuar
             if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
+            // Validar token y setear autenticación con authorities del usuario real
+            boolean valid;
             try {
-                if (jwtUtil.validateToken(token)) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    var authentication = jwtUtil.getAuthentication(token, userDetails);
-                    if (authentication != null) {
-                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    }
+                valid = jwtUtil.validateToken(token);
+            } catch (Exception e) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (valid) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                var authentication = jwtUtil.getAuthentication(token, userDetails);
+                if (authentication != null) {
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            } catch (Exception ignore) { }
+            }
 
             filterChain.doFilter(request, response);
         } catch (Exception ex) {
+            // Nunca cortar la cadena por errores del filtro
             filterChain.doFilter(request, response);
         }
     }

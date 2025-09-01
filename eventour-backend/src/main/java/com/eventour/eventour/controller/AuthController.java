@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,25 +24,30 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> payload) {
-        String username = payload.get("username");
-        String password = payload.get("password");
+    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
+        String username = body.get("username");
+        String password = body.get("password");
 
         Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
-        );
+                new UsernamePasswordAuthenticationToken(username, password));
 
-        UserDetails user = (UserDetails) auth.getPrincipal();
-        String token = jwtUtil.generateToken(user);     // role = ROLE_...
+        UserDetails userDetails = (UserDetails) auth.getPrincipal();
+        String token = jwtUtil.generateToken(userDetails);
 
-        String role = jwtUtil.getRoleFromToken(token);  // ROLE_ADMIN
-        String roleSimple = role != null && role.startsWith("ROLE_")
-                ? role.substring("ROLE_".length())
-                : role;
+        // Para el front: devolvemos la PRIMER autoridad; ya viene como ROLE_*
+        String firstRole = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority) // e.g. ROLE_ADMIN
+                .findFirst()
+                .orElse("ROLE_USER");
 
         return ResponseEntity.ok(Map.of(
                 "token", token,
-                "role", roleSimple   // ADMIN / USER (por si el front lo muestra)
+                "role", firstRole.replace("ROLE_", "") // ADMIN / USER
         ));
+    }
+
+    @GetMapping("/whoami")
+    public ResponseEntity<?> whoami(@RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(Map.of("auth", authHeader));
     }
 }
