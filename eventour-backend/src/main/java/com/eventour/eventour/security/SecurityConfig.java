@@ -45,8 +45,8 @@ public class SecurityConfig {
                 "http://localhost:*",
                 "http://127.0.0.1:*"
         ));
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
+        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
+        cfg.setAllowedHeaders(List.of("Authorization","Content-Type","X-Requested-With","Accept","Origin"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
         return source;
@@ -59,20 +59,22 @@ public class SecurityConfig {
                 .cors(c -> c.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // Público
                         .requestMatchers("/error", "/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/eventos/**", "/api/ubicaciones/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/eventos/**",
+                                "/api/ubicaciones/**").permitAll()
 
-                        // Admin
-                        .requestMatchers(HttpMethod.POST, "/api/eventos/**", "/api/ubicaciones/**").hasRole("ADMIN")
+                        // Solo ADMIN puede mutar
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/eventos/**",
+                                "/api/ubicaciones/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
 
-                        // Lo demás, autenticado
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -80,7 +82,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder) {
