@@ -76,4 +76,9 @@ public class JwtUtil {
         List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(getRoleFromToken(token)));
         return new UsernamePasswordAuthenticationToken(userDetails,null, authorities);
     }
+
+    public String getClaim(String token, String string) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getClaim'");
+    }
 }
