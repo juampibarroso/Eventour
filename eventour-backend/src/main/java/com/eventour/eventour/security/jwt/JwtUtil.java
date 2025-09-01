@@ -1,79 +1,77 @@
 package com.eventour.eventour.security.jwt;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.crypto.SecretKey;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Map;
 
 @Component
 public class JwtUtil {
 
-    private final SecretKey key;
-    private final long expirationMillis;
+    @Value("${app.jwt.secret}")
+    private String secret;
 
-    public JwtUtil(
-            @Value("${jwt.secret:a-string-secret-at-least-256-bits-long}") String secret,
-            @Value("${jwt.expiration.millis:86400000}") long expirationMillis) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        this.expirationMillis = expirationMillis;
-    }
+    // 24 hs por ejemplo (ajustá a tu gusto)
+    private static final long EXP_MS = 24L * 60 * 60 * 1000;
 
-    public String generateToken(UserDetails user) {
-        String role = firstAuthority(user.getAuthorities()); // ej: ROLE_ADMIN
+    public String generateToken(UserDetails userDetails) {
         Date now = new Date();
-        Date exp = new Date(now.getTime() + expirationMillis);
+        Date exp = new Date(now.getTime() + EXP_MS);
+
+        // Notar que en el token guardamos el subject y, opcionalmente, un claim "role" informativo.
+        // La autorización REAL sale de la DB vía UserDetailsService.
+        String firstRole = userDetails.getAuthorities().stream()
+                .findFirst()
+                .map(a -> a.getAuthority()) // e.g. ROLE_ADMIN
+                .orElse("ROLE_USER");
 
         return Jwts.builder()
-                .setSubject(user.getUsername())
-                .addClaims(Map.of("role", role))
+                .setSubject(userDetails.getUsername())
+                .claim("role", firstRole)   // informativo
                 .setIssuedAt(now)
                 .setExpiration(exp)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
     }
 
-    private String firstAuthority(Collection<? extends GrantedAuthority> auths) {
-        return auths.stream().findFirst().map(GrantedAuthority::getAuthority).orElse("ROLE_USER");
-    }
-
     public String getUsernameFromToken(String token) {
-        return parser(token).getBody().getSubject();
-    }
-
-    public String getRoleFromToken(String token) {
-        Object r = parser(token).getBody().get("role");
-        return r == null ? null : r.toString();
+        return getAllClaimsFromToken(token).getSubject();
     }
 
     public boolean validateToken(String token) {
-        parser(token); // lanza si hay problema
-        return true;
-    }
-
-    private Jws<Claims> parser(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+        try {
+            Claims c = getAllClaimsFromToken(token);
+            return c.getExpiration() != null && c.getExpiration().after(new Date());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     
 
-    // dentro de la clase JwtUtil
-    public UsernamePasswordAuthenticationToken getAuthentication(String token, UserDetails userDetails) {
-        return new UsernamePasswordAuthenticationToken(
-                userDetails,
-                null,
-                userDetails.getAuthorities());
+    private Claims getAllClaimsFromToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(secret)
+                .parseClaimsJws(token)
+                .getBody();
     }
+
+    public UsernamePasswordAuthenticationToken getAuthentication(String token, UserDetails userDetails) {
+    // No leas "role" del token para armar authorities.
+    // Usá las del usuario real (DB): ROLE_ADMIN, etc.
+    return new UsernamePasswordAuthenticationToken(
+            userDetails,
+            null,
+            userDetails.getAuthorities()
+    );
+}
+    
 
 }

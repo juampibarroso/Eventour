@@ -18,37 +18,32 @@ public class UbicacionController {
         this.ubicacionService = ubicacionService;
     }
 
-    // ------- Crear (JSON plano) -------
+    // crear ubicacion
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UbicacionDTO> crear(@RequestBody UbicacionDTO dto) {
-        // Validación mínima: exigir “oasis” (tu requirement)
-        if (dto.oasis() == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        UbicacionDTO creada = ubicacionService.crearUbicacion(dto);
-        return ResponseEntity.ok(creada);
+        UbicacionDTO nueva = ubicacionService.crearUbicacion(dto);
+        return ResponseEntity.ok(nueva);
     }
 
-    // ------- Listar -------
+    // listar
     @GetMapping
     public ResponseEntity<List<UbicacionDTO>> listar() {
         return ResponseEntity.ok(ubicacionService.listarUbicaciones());
     }
 
-    // ------- Obtener por ID -------
+    // obtener por id
     @GetMapping("/{id}")
     public ResponseEntity<UbicacionDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(ubicacionService.obtenerUbicacionPorId(id));
     }
 
-    // ------- Actualizar -------
+    // actualizar
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UbicacionDTO> actualizar(@PathVariable Long id,
-                                                   @RequestBody UbicacionDTO dto) {
+    public ResponseEntity<UbicacionDTO> actualizar(@PathVariable Long id, @RequestBody UbicacionDTO dto) {
         return ResponseEntity.ok(ubicacionService.actualizarUbicacion(id, dto));
     }
 
-    // ------- Eliminar -------
+    // eliminar
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         ubicacionService.eliminarUbicacion(id);
