@@ -9,10 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(
-        value = "/api/ubicaciones",
-        produces = MediaType.APPLICATION_JSON_VALUE
-)
+@RequestMapping(value = "/api/ubicaciones", produces = MediaType.APPLICATION_JSON_VALUE)
 public class UbicacionController {
 
     private final UbicacionService ubicacionService;
@@ -21,39 +18,37 @@ public class UbicacionController {
         this.ubicacionService = ubicacionService;
     }
 
-    // ---------- CREATE ----------
+    // ------- Crear (JSON plano) -------
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UbicacionDTO> crear(@RequestBody UbicacionDTO dto) {
-        // Validación mínima para evitar 500 por null en la entidad
+        // Validación mínima: exigir “oasis” (tu requirement)
         if (dto.oasis() == null) {
             return ResponseEntity.badRequest().build();
         }
-        UbicacionDTO nueva = ubicacionService.crearUbicacion(dto);
-        return ResponseEntity.ok(nueva);
+        UbicacionDTO creada = ubicacionService.crearUbicacion(dto);
+        return ResponseEntity.ok(creada);
     }
 
-    // ---------- READ ----------
+    // ------- Listar -------
     @GetMapping
     public ResponseEntity<List<UbicacionDTO>> listar() {
         return ResponseEntity.ok(ubicacionService.listarUbicaciones());
     }
 
+    // ------- Obtener por ID -------
     @GetMapping("/{id}")
-    public ResponseEntity<UbicacionDTO> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<UbicacionDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(ubicacionService.obtenerUbicacionPorId(id));
     }
 
-    // ---------- UPDATE ----------
-    @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UbicacionDTO> actualizar(
-            @PathVariable Long id,
-            @RequestBody UbicacionDTO dto
-    ) {
-        UbicacionDTO actualizada = ubicacionService.actualizarUbicacion(id, dto);
-        return ResponseEntity.ok(actualizada);
+    // ------- Actualizar -------
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UbicacionDTO> actualizar(@PathVariable Long id,
+                                                   @RequestBody UbicacionDTO dto) {
+        return ResponseEntity.ok(ubicacionService.actualizarUbicacion(id, dto));
     }
 
-    // ---------- DELETE ----------
+    // ------- Eliminar -------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         ubicacionService.eliminarUbicacion(id);
