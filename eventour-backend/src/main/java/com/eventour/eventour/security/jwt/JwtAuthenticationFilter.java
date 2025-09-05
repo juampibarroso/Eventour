@@ -9,8 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
@@ -25,6 +25,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+    /** No filtrar rutas públicas (login, health, error) */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String p = request.getServletPath();
+        return p.startsWith("/api/auth")
+                || p.startsWith("/actuator")
+                || p.equals("/error");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -34,49 +43,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String authHeader = request.getHeader("Authorization");
 
-            // Si no hay header Bearer -> continuar
+            // Si no hay header Bearer -> continuar sin tocar nada
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Token
             String token = authHeader.substring(7).trim();
             if (token.isEmpty()) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Username desde el token
-            String username;
+            String username = null;
             try {
                 username = jwtUtil.getUsernameFromToken(token);
-            } catch (Exception e) {
+            } catch (Exception ignored) {
+                // token inválido -> dejamos seguir, el controller/capad seg validará
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Si ya hay autenticación -> continuar
-            if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            // Validar token y setear autenticación con authorities del usuario real
-            boolean valid;
-            try {
-                valid = jwtUtil.validateToken(token);
-            } catch (Exception e) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            if (valid) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                var authentication = jwtUtil.getAuthentication(token, userDetails);
-                if (authentication != null) {
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                try {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    if (jwtUtil.validateToken(token)) {
+                        var authentication = jwtUtil.getAuthentication(token, userDetails);
+                        if (authentication != null) {
+                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                        }
+                    }
+                } catch (Exception ignored) {
+                    // ante errores de carga/validación, no bloqueamos la cadena
                 }
             }
 

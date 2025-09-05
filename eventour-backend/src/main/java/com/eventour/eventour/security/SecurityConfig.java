@@ -59,23 +59,18 @@ public class SecurityConfig {
                 .cors(c -> c.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Preflight CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Público
                         .requestMatchers("/error", "/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/eventos/**", "/api/ubicaciones/**").permitAll()
 
-                        // Debug: quién soy (útil para probar el rol)
                         .requestMatchers(HttpMethod.GET, "/api/whoami").authenticated()
 
-                        // Mutaciones: ADMIN
                         .requestMatchers(HttpMethod.POST, "/api/eventos/**", "/api/ubicaciones/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
 
-                        // Resto autenticado
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

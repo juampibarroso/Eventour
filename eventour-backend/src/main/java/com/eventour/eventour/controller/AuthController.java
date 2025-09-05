@@ -1,6 +1,7 @@
 package com.eventour.eventour.controller;
 
 import com.eventour.eventour.security.jwt.JwtUtil;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,10 +24,20 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
-    @PostMapping("/login")
+    @PostMapping(
+        value = "/login",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
-        String username = body.get("username");
+        // Aceptar "username" o "email" (por si el front envía email)
+        String username = body.getOrDefault("username", body.get("email"));
         String password = body.get("password");
+
+        if (username == null || password == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "username/password requeridos"));
+        }
 
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password));
@@ -34,7 +45,6 @@ public class AuthController {
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
         String token = jwtUtil.generateToken(userDetails);
 
-        // Para el front: devolvemos la PRIMER autoridad; ya viene como ROLE_*
         String firstRole = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority) // e.g. ROLE_ADMIN
                 .findFirst()
@@ -47,7 +57,7 @@ public class AuthController {
     }
 
     @GetMapping("/whoami")
-    public ResponseEntity<?> whoami(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> whoami(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         return ResponseEntity.ok(Map.of("auth", authHeader));
     }
 }
