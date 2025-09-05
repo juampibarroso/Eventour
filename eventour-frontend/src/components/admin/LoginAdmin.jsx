@@ -10,7 +10,6 @@ const LoginAdmin = ({ onLogin }) => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // 👉 Al cargar el componente, verificar si hay un email guardado
   useEffect(() => {
     const emailGuardado = localStorage.getItem("adminEmailRecordado");
     if (emailGuardado) {
@@ -21,46 +20,51 @@ const LoginAdmin = ({ onLogin }) => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    console.log("🧪 Entró al handleLogin con:", email, password);
+    setError("");
 
     try {
-        const API = import.meta.env.VITE_API_URL;
-        const response = await axios.post(`${API}/auth/login`, {
+      const API = import.meta.env.VITE_API_URL;
 
-          
-          username: email,
+      const { data } = await axios.post(
+        `${API}/auth/login`,
+        {
+          username: email,        // ⬅️ el backend espera username
           password: password,
-
-      });
-      
-      console.log("Datos devuelto por el backend: ",response.data);
-
-      const { token, role } = response.data;
-
-      if (role === "ADMIN") {
-        try {
-          localStorage.setItem("token", token);
-          localStorage.setItem("role", role);
-
-          // ✅ Guardar email si está tildado "Recordar usuario"
-          if (recordarUsuario) {
-            localStorage.setItem("adminEmailRecordado", email);
-          } else {
-            localStorage.removeItem("adminEmailRecordado");
-          }
-
-        } catch (err) {
-          console.warn("⚠️ No se pudo acceder a localStorage:", err);
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
         }
+      );
 
-        onLogin(true);
-        navigate("/admin/dashboard");
-      } else {
-        setError("No tenés permisos de administrador.");
+      const { token, role } = data || {};
+
+      if (!token) {
+        setError("Respuesta inválida del servidor.");
+        return;
       }
+
+      if (role !== "ADMIN") {
+        setError("No tenés permisos de administrador.");
+        return;
+      }
+
+      // guardar credenciales
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+
+      if (recordarUsuario) {
+        localStorage.setItem("adminEmailRecordado", email);
+      } else {
+        localStorage.removeItem("adminEmailRecordado");
+      }
+
+      onLogin?.(true);
+      navigate("/admin/dashboard");
     } catch (err) {
-      console.log("🧪 Error al intentar loguear:", err);
+      console.error("Error al intentar loguear:", err?.response?.status, err?.response?.data);
       setError("Credenciales incorrectas o servidor no disponible.");
     }
   };
@@ -70,19 +74,21 @@ const LoginAdmin = ({ onLogin }) => {
       <form onSubmit={handleLogin} className="login-form">
         <h2>Iniciar Sesión (Admin)</h2>
         {error && <p className="login-error">{error}</p>}
-        
+
         <input
           type="email"
           placeholder="Correo electrónico"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
-        
+
         <input
           type="password"
           placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
 
         <label className="recordar-checkbox">
