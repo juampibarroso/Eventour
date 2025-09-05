@@ -26,13 +26,11 @@ const UbicacionForm = () => {
   const [mapCenter, setMapCenter] = useState({ lat: -32.889458, lng: -68.845839 }); // Mendoza
   const autocompleteRef = useRef(null);
 
-  // Maneja cambios en inputs/select
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUbicacion((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Cuando el usuario elige una dirección de Google
   const handlePlaceChanged = () => {
     const place = autocompleteRef.current?.getPlace();
     if (place?.geometry) {
@@ -50,16 +48,19 @@ const UbicacionForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!ubicacion.nombre || !ubicacion.direccion || !ubicacion.oasis || ubicacion.latitud == null || ubicacion.longitud == null) {
+      alert("Completá nombre, dirección, zona y seleccioná un punto en el mapa.");
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token"); // token guardado al loguear
-
-      console.log("Ubicación que se envía:", JSON.stringify(ubicacion, null, 2));
-
-      
-      await axios.post(`${API}/ubicaciones`, JSON.stringify(ubicacion), {
+      const token = localStorage.getItem("token");
+      await axios.post(`${API}/ubicaciones`, ubicacion, {
         headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
       });
 
@@ -97,21 +98,12 @@ const UbicacionForm = () => {
               type="text"
               placeholder="Buscar dirección"
               className="autocomplete-input"
-              style={{
-                width: "100%",
-                height: "40px",
-                padding: "10px",
-                borderRadius: "6px",
-                border: "none",
-                marginBottom: "10px",
-              }}
-              // Permitir escribir manualmente si no se usa el Autocomplete
+              style={{ width: "100%", height: "40px", padding: "10px", borderRadius: "6px", border: "none", marginBottom: "10px" }}
               onChange={(e) => setUbicacion((p) => ({ ...p, direccion: e.target.value }))}
               value={ubicacion.direccion}
             />
           </Autocomplete>
 
-          {/* OASIS: usa EXACTAMENTE los valores del enum del backend */}
           <select name="oasis" value={ubicacion.oasis} onChange={handleChange} required>
             <option value="">Seleccionar ZONA.</option>
             <option value="ZONA_ESTE">Zona Este</option>
@@ -123,8 +115,7 @@ const UbicacionForm = () => {
           <button type="submit">Guardar Ubicación</button>
         </form>
 
-        {/* Vista previa del mapa */}
-        {ubicacion.latitud && (
+        {ubicacion.latitud != null && ubicacion.longitud != null && (
           <GoogleMap center={mapCenter} zoom={15} mapContainerStyle={mapContainerStyle}>
             <Marker position={{ lat: ubicacion.latitud, lng: ubicacion.longitud }} />
           </GoogleMap>
