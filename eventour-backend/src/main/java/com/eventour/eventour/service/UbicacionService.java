@@ -46,7 +46,6 @@ public class UbicacionService {
 
         if (dto.nombre() != null) entity.setNombre(dto.nombre());
         if (dto.direccion() != null) entity.setDireccion(dto.direccion());
-        if (dto.localidad() != null) entity.setLocalidad(dto.localidad());
         if (dto.oasis() != null) entity.setOasis(dto.oasis());
         if (dto.latitud() != null) entity.setLatitud(dto.latitud());
         if (dto.longitud() != null) entity.setLongitud(dto.longitud());
@@ -69,7 +68,6 @@ public class UbicacionService {
                 e.getId(),
                 e.getNombre(),
                 e.getDireccion(),
-                e.getLocalidad(),
                 e.getOasis(),
                 e.getLatitud(),
                 e.getLongitud()
@@ -79,8 +77,7 @@ public class UbicacionService {
     private Ubicacion toEntity(UbicacionDTO d) {
         Ubicacion e = new Ubicacion();
         e.setNombre(d.nombre());
-        e.setDireccion(d.direccion());
-        e.setLocalidad(d.localidad()); // puede venir null
+        e.setDireccion(d.direccion()); 
         e.setOasis(d.oasis());         // **requerido** por el controller
         e.setLatitud(d.latitud());
         e.setLongitud(d.longitud());
