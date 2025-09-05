@@ -19,10 +19,6 @@ public class Ubicacion {
     @Column(nullable = true)
     private String direccion;
 
-    @Column(nullable = true)
-    private String localidad;
-
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Oasis oasis;
@@ -42,10 +38,10 @@ public class Ubicacion {
     public Ubicacion() {
     }
 
-    public Ubicacion( String nombre, String direccion,String localidad, Oasis oasis, Double latitud, Double longitud) {
+    public Ubicacion( String nombre, String direccion, Oasis oasis, Double latitud, Double longitud) {
         this.nombre = nombre;
         this.direccion = direccion;
-        this.localidad = localidad;
+        
         this.oasis= oasis;
         this.latitud = latitud;
         this.longitud = longitud;
@@ -73,14 +69,6 @@ public class Ubicacion {
 
     public void setDireccion(String direccion) {
         this.direccion = direccion;
-    }
-
-    public String getLocalidad() {
-        return localidad;
-    }
-
-    public void setLocalidad(String localidad) {
-        this.localidad = localidad;
     }
 
     public Oasis getOasis() {
