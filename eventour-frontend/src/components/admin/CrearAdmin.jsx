@@ -18,11 +18,15 @@ const CrearAdmin = () => {
         { username, password },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": `Bearer ${token}`,
           },
         }
       );
       setMensaje(`Admin creado correctamente: ${response.data.username}`);
+      setUsername("");
+      setPassword("");
     } catch (err) {
       console.error(err);
       setMensaje("Error al crear admin");

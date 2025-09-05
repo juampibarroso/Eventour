@@ -9,8 +9,18 @@ const DashboardAdmin = ({ onLogout }) => {
   const [eventoActual, setEventoActual] = useState(null);
   const API = import.meta.env.VITE_API_URL;
 
+  const authHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`,
+    };
+  };
+
   const fetchEventos = async () => {
     try {
+      // GET público según tu SecurityConfig
       const res = await fetch(`${API}/eventos`);
       const data = await res.json();
       setEventos(data);
@@ -26,18 +36,23 @@ const DashboardAdmin = ({ onLogout }) => {
   const handleSave = async (evento) => {
     try {
       const isEdit = !!evento.id;
-      const url = isEdit
-        ? `${API}/eventos/${evento.id}`
-        : `${API}/eventos`;
+      const url = isEdit ? `${API}/eventos/${evento.id}` : `${API}/eventos`;
       const method = isEdit ? "PUT" : "POST";
+
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),           // ⬅️ token + JSON
         body: JSON.stringify(evento),
       });
-      if (res.ok) fetchEventos();
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`Error ${res.status}: ${txt}`);
+      }
+      fetchEventos();
     } catch (error) {
       console.error("Error al guardar evento:", error);
+      alert("❌ No se pudo guardar el evento");
     }
   };
 
@@ -46,10 +61,17 @@ const DashboardAdmin = ({ onLogout }) => {
     try {
       const res = await fetch(`${API}/eventos/${id}`, {
         method: "DELETE",
+        headers: authHeaders(),           // ⬅️ token
       });
-      if (res.ok) fetchEventos();
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`Error ${res.status}: ${txt}`);
+      }
+      fetchEventos();
     } catch (error) {
       console.error("Error al eliminar evento:", error);
+      alert("❌ No se pudo eliminar el evento");
     }
   };
 
@@ -82,8 +104,6 @@ const DashboardAdmin = ({ onLogout }) => {
           onDelete={handleDelete}
         />
       </section>
-
-      
     </div>
   );
 };
