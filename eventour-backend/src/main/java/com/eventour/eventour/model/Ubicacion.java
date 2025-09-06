@@ -20,7 +20,7 @@ public class Ubicacion {
     private String direccion;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private Oasis oasis;
 
     @Column(nullable = true)
