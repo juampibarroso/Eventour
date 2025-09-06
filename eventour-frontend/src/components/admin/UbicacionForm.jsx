@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import axios from "axios";
 
+
 // --- DEBES REEMPLAZAR ESTAS LÍNEAS CON TU INFORMACIÓN ---
 const API = import.meta.env.VITE_API_URL;
 const GOOGLE_MAPS_API_KEY = "AIzaSyByF2ZxHZlhvKlUSROh5iL1jrRUJ2ynPaM"; 
@@ -30,27 +31,50 @@ const UbicacionForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validación básica
+    if (!ubicacion.nombre || !ubicacion.direccion || !ubicacion.oasis) {
+      alert("Por favor completa todos los campos obligatorios");
+      return;
+    }
+    
     try {
       const token = localStorage.getItem("token");
       
+      // Crear payload de forma muy explícita
       const ubicacionPayload = {
-        nombre: ubicacion.nombre,
-        direccion: ubicacion.direccion,
+        nombre: ubicacion.nombre.trim(),
+        direccion: ubicacion.direccion.trim(),
         oasis: ubicacion.oasis,
-        latitud: ubicacion.latitud ? Number(ubicacion.latitud) : null,
-        longitud: ubicacion.longitud ? Number(ubicacion.longitud) : null,
+        latitud: ubicacion.latitud ? parseFloat(ubicacion.latitud) : null,
+        longitud: ubicacion.longitud ? parseFloat(ubicacion.longitud) : null,
       };
 
-      console.log("Ubicación que se envía:", JSON.stringify(ubicacionPayload, null, 2));
+      console.log("=== DATOS A ENVIAR ===");
+      console.log("Token:", token ? "✅ Presente" : "❌ No encontrado");
+      console.log("API URL:", `${API}/ubicaciones`);
+      console.log("Payload:", JSON.stringify(ubicacionPayload, null, 2));
+      console.log("=====================");
       
-      const response = await axios.post(`${API}/ubicaciones`, ubicacionPayload, {
+      // Configuración muy explícita de axios
+      const config = {
+        method: 'POST',
+        url: `${API}/ubicaciones`,
+        data: ubicacionPayload,
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-      });
+      };
 
+      console.log("Config de axios:", config);
+      
+      const response = await axios(config);
+      
+      console.log("✅ Respuesta exitosa:", response.data);
       alert("✅ Ubicación guardada correctamente");
+      
+      // Reset form
       setUbicacion({
         nombre: "",
         direccion: "",
@@ -58,11 +82,18 @@ const UbicacionForm = () => {
         latitud: null,
         longitud: null,
       });
+      
     } catch (error) {
-      console.error("Error completo:", error);
-      console.error("Response data:", error.response?.data);
+      console.error("=== ERROR COMPLETO ===");
+      console.error("Error:", error);
+      console.error("Message:", error.message);
+      console.error("Response:", error.response);
       console.error("Status:", error.response?.status);
-      alert("❌ Error al guardar ubicación");
+      console.error("Data:", error.response?.data);
+      console.error("Headers enviados:", error.config?.headers);
+      console.error("Data enviada:", error.config?.data);
+      console.error("====================");
+      alert(`❌ Error al guardar ubicación: ${error.response?.data?.message || error.message}`);
     }
   };
 
