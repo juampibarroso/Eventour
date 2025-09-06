@@ -21,8 +21,9 @@ public class UbicacionController {
     // crear ubicacion
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UbicacionDTO> crear(@RequestBody UbicacionDTO dto) {
-        UbicacionDTO nueva = ubicacionService.crearUbicacion(dto);
-        return ResponseEntity.ok(nueva);
+    System.out.println("DTO recibido: " + dto); // ← Debug temporal
+    UbicacionDTO nueva = ubicacionService.crearUbicacion(dto);
+    return ResponseEntity.ok(nueva);
     }
 
     // listar
