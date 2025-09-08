@@ -2,6 +2,7 @@ package com.eventour.eventour.controller;
 
 import com.eventour.eventour.dto.UbicacionDTO;
 import com.eventour.eventour.service.UbicacionService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +21,12 @@ public class UbicacionController {
 
     // crear ubicacion
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UbicacionDTO> crear(@RequestBody UbicacionDTO dto) {
-    System.out.println("DTO recibido: " + dto); // ← Debug temporal
+    public ResponseEntity<UbicacionDTO> crear(HttpServletRequest request, @RequestBody UbicacionDTO dto) {
+        System.out.println("=== CONTROLLER DEBUG ===");
+        System.out.println("Content-Type recibido: " + request.getContentType());
+        System.out.println("Content-Length recibido: " + request.getContentLength());
+        System.out.println("DTO recibido: " + dto);
+        System.out.println("========================");
     UbicacionDTO nueva = ubicacionService.crearUbicacion(dto);
     return ResponseEntity.ok(nueva);
     }
