@@ -1,150 +1,255 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import EventCard from "../components/EventCard";
+import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { API_BASE, getJson } from "../lib/api";
 import "../styles/BusquedaCategoria.css";
-import "../styles/EventListPage.css"; // Para usar .eventos-grid
 
-const coloresPorCategoria = {
-  DEPORTESYAVENTURA: "#09c3dd",
-  GASTRONOMIAYVINO: "#f79e1b",
-  FERIASYEXPOSICIONES: "#ffd166",
-  MUSICAYESPECTACULOS: "#db49fb",
-  ARTEYCULTURA: "#4caf50",
-  CHARLASYEVENTOSEMPRESARIALES: "#3f51b5",
+/** Catálogo = exactamente los valores que guarda el backend */
+const CATS = [
+  { value: "ARTEYCULTURA", label: "Arte y Cultura", icon: "🎨" },
+  { value: "CHARLASYEVENTOSEMPRESARIALES", label: "Charlas y Eventos Empr.", icon: "💼" },
+  { value: "DEPORTESYAVENTURA", label: "Deportes y Aventura", icon: "🏃" },
+  { value: "FERIASYEXPOSICIONES", label: "Ferias y Exposiciones", icon: "🧺" },
+  { value: "GASTRONOMIAYVINO", label: "Gastronomía y Vino", icon: "🍷" },
+  { value: "MUSICAYESPECTACULOS", label: "Música y Espectáculos", icon: "🎵" },
+];
+
+const LABEL_CAT = Object.fromEntries(CATS.map(c => [c.value, c.label]));
+
+const toISO = (d) => {
+  if (!d) return "";
+  const dt = new Date(d);
+  if (Number.isNaN(+dt)) return "";
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, "0");
+  const da = String(dt.getDate()).padStart(2, "0");
+  return `${y}-${m}-${da}`;
 };
 
-const imagenesPorCategoria = {
-  DEPORTESYAVENTURA: "/src/assets/fondos/88.png",
-  GASTRONOMIAYVINO: "/src/assets/fondos/33.jpg",
-  FERIASYEXPOSICIONES: "/src/assets/fondos/55.jpg",
-  MUSICAYESPECTACULOS: "/src/assets/fondos/14.jpg",
-  ARTEYCULTURA: "/src/assets/fondos/99.jpg",
-  CHARLASYEVENTOSEMPRESARIALES: "/src/assets/fondos/12.jpg",
+const normalizeEvent = (raw) => {
+  const titulo = raw.titulo ?? raw.title ?? raw.nombre ?? "";
+  const descripcion = raw.descripcion ?? raw.description ?? "";
+
+  const fi = raw.fecha_inicio ?? raw.fechaInicio ?? raw.startDate ?? raw.fecha ?? null;
+  const ff = raw.fecha_fin ?? raw.fechaFin ?? raw.endDate ?? raw.fecha ?? null;
+
+  const categoria = (raw.categoria ?? raw.categoriaEvento ?? raw.category ?? "")
+    ? String(raw.categoria ?? raw.categoriaEvento ?? raw.category).toUpperCase()
+    : "";
+
+  const precio = Number(raw.precio ?? 0) || 0;
+  const destacado = typeof raw.destacado === "number" ? raw.destacado > 0 : !!raw.destacado;
+
+  const imagen =
+    raw.imagen ??
+    raw.imagenUrl ??
+    raw.urlImagen ??
+    raw.imagenPrincipal ??
+    raw.imageUrl ??
+    "";
+
+  return {
+    id: raw.id,
+    titulo,
+    descripcion,
+    fechaInicio: toISO(fi),
+    fechaFin: toISO(ff || fi),
+    categoria,
+    precio,
+    destacado,
+    imagen,
+  };
 };
 
-const iconosPorCategoria = {
-  DEPORTESYAVENTURA: "fa-person-hiking",
-  GASTRONOMIAYVINO: "fa-wine-glass",
-  FERIASYEXPOSICIONES: "fa-store",
-  MUSICAYESPECTACULOS: "fa-music",
-  ARTEYCULTURA: "fa-paint-brush",
-  CHARLASYEVENTOSEMPRESARIALES: "fa-briefcase",
+const toProxyUrl = (absoluteUrl) => {
+  try {
+    const noProto = absoluteUrl.replace(/^https?:\/\//i, "");
+    return `https://images.weserv.nl/?url=${encodeURIComponent(noProto)}&w=1024&h=576&fit=cover`;
+  } catch {
+    return absoluteUrl;
+  }
 };
 
-const BusquedaCategoria = () => {
-  const [categorias, setCategorias] = useState([]);
-  const [eventos, setEventos] = useState([]);
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
-  const [busqueda, setBusqueda] = useState("");
-  const [fechaDesde, setFechaDesde] = useState("");
+export default function BusquedaCategoria() {
+  const [params, setParams] = useSearchParams();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
 
-  const location = useLocation();
+  // categoría actual en URL (si no hay, mostramos TODO)
+  const currentCat = (params.get("category") || "").toUpperCase();
 
   useEffect(() => {
-    const categoriasEnum = Object.keys(coloresPorCategoria).map((cat) => ({
-      id: cat,
-      nombre: cat,
-    }));
-    setCategorias(categoriasEnum);
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      try {
+        // ⚠️ Igual que en tu EventForm: SIEMPRE API_BASE
+        const data = await getJson(`${API_BASE}/eventos`, { auth: false });
+        if (!alive) return;
+        setEvents(Array.isArray(data) ? data.map(normalizeEvent) : []);
+      } catch (e) {
+        console.error("GET eventos error:", e);
+        if (!alive) setEvents([]);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
 
-    const params = new URLSearchParams(location.search);
-    const categoriaDesdeURL = params.get("categoria");
-    if (categoriaDesdeURL) {
-      setCategoriaSeleccionada(categoriaDesdeURL);
-      fetchEventosPorCategoria(categoriaDesdeURL);
+  const filtered = useMemo(() => {
+    let list = [...events];
+
+    // si hay categoría, filtramos SOLO por esa
+    if (currentCat) list = list.filter(ev => ev.categoria === currentCat);
+
+    // filtro de texto
+    const qn = q.trim().toLowerCase();
+    if (qn) {
+      list = list.filter(ev =>
+        (`${ev.titulo} ${ev.descripcion}`).toLowerCase().includes(qn)
+      );
     }
-  }, [location.search]);
 
-  const fetchEventosPorCategoria = (categoria) => {git 
-    const API = import.meta.env.VITE_API_URL;
-    fetch(`${API}/eventos?categoria=${categoria}`)
-      .then((res) => res.json())
-      .then((data) => setEventos(data))
-      .catch((error) => console.error("Error al obtener eventos:", error));
+    // orden por fecha ascendente
+    list.sort((a, b) => {
+      const da = new Date(a.fechaInicio || a.fechaFin || "2100-01-01");
+      const db = new Date(b.fechaInicio || b.fechaFin || "2100-01-01");
+      return da - db;
+    });
+
+    return list;
+  }, [events, currentCat, q]);
+
+  const selectCat = (value) => {
+    const next = new URLSearchParams(params);
+    if (value) next.set("category", value);
+    else next.delete("category");
+    setParams(next, { replace: true });
   };
-
-  
-
-  const handleCategoriaClick = (categoria) => {
-    if (categoria === categoriaSeleccionada) return;
-    setCategoriaSeleccionada(categoria);
-    setBusqueda("");
-    setFechaDesde("");
-    fetchEventosPorCategoria(categoria);
-  };
-
-  const eventosFiltrados = eventos.filter((evento) => {
-    const nombre = evento.titulo || evento.nombre || "";
-    const fecha = evento.fechaInicio || evento.fecha || "";
-    const coincideNombre = nombre.toLowerCase().includes(busqueda.toLowerCase());
-    const coincideFecha = fechaDesde ? new Date(fecha) >= new Date(fechaDesde) : true;
-    return coincideNombre && coincideFecha;
-  });
 
   return (
-    <div className="busqueda-categoria-container">
-      <h1 className="titulo-busqueda">Buscar por Categoría</h1>
-      <p className="descripcion">
-        Navegá entre las categorías y encontrá el evento perfecto para vos.
-      </p>
+    <main className="catv3-page" role="main" aria-labelledby="catv3-title">
+      <header className="catv3-head">
+        <h1 id="catv3-title" className="catv3-title">Explorá por Categoría</h1>
+        <p className="catv3-sub">Elegí una categoría y descubrí los eventos relacionados.</p>
+      </header>
 
-      <div className="categoria-nav">
-        {categorias.map((categoria) => (
-          <div
-            key={categoria.id}
-            className={`categoria-card ${categoria.nombre === categoriaSeleccionada ? "activa" : ""}`}
-            onClick={() => handleCategoriaClick(categoria.nombre)}
-            style={{ borderColor: coloresPorCategoria[categoria.nombre] }}
-          >
-            <img
-              src={imagenesPorCategoria[categoria.nombre]}
-              alt={`Imagen de ${categoria.nombre}`}
-              className="categoria-card-img"
-            />
-            <div className="categoria-card-text">
-              <i className={`categoria-card-icon fas ${iconosPorCategoria[categoria.nombre]}`} />
-              {categoria.nombre.replace(/Y/g, " y ").replace(/([A-Z])/g, " $1").trim()}
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Categorías (grid simétrico) */}
+      <section className="catv3-grid" aria-label="Categorías">
+        {CATS.map((c) => {
+          const active = currentCat === c.value;
+          return (
+            <button
+              key={c.value}
+              className={`catv3-card ${active ? "active" : ""}`}
+              onClick={() => selectCat(c.value)}
+              type="button"
+            >
+              <div className="catv3-icon" aria-hidden="true">{c.icon}</div>
+              <div className="catv3-label">{c.label}</div>
+            </button>
+          );
+        })}
+      </section>
 
-      {categoriaSeleccionada && (
-        <div className="filtros-container">
+      {/* Buscador local (sin botón “ver todos…”) */}
+      <section className="catv3-actions">
+        <div className="catv3-search-wrap">
+          <span className="catv3-lupa" aria-hidden>🔎</span>
           <input
-            type="text"
-            placeholder="Buscar eventos por nombre..."
-            className="input-busqueda"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
-          <input
-            type="date"
-            className="input-fecha"
-            value={fechaDesde}
-            onChange={(e) => setFechaDesde(e.target.value)}
+            className="catv3-search"
+            placeholder="Filtrar por título o descripción…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
           />
         </div>
-      )}
-
-      <div className="eventos-container">
-        {categoriaSeleccionada === "" ? (
-          <p className="no-eventos">Elegí una categoría para comenzar.</p>
-        ) : eventosFiltrados.length > 0 ? (
-          <>
-            <h2 className="subtitulo">Eventos encontrados:</h2>
-            <div className="eventos-grid">
-              {eventosFiltrados.map((evento) => (
-                <EventCard key={evento.id} event={evento} />
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className="no-eventos">No hay eventos en esta categoría.</p>
+        {currentCat && (
+          <button className="catv3-clear" onClick={() => selectCat("")} type="button">
+            Limpiar categoría
+          </button>
         )}
-      </div>
-    </div>
-  );
-};
+      </section>
 
-export default BusquedaCategoria;
+      {/* RESULTADOS AQUÍ ABAJO */}
+      <section className="catv3-results" aria-live="polite">
+        {loading ? (
+          <div className="catv3-state">Cargando…</div>
+        ) : filtered.length === 0 ? (
+          <div className="catv3-state">
+            {currentCat ? "No hay eventos para esta selección." : "No hay eventos disponibles."}
+          </div>
+        ) : (
+          <div className="catv3-grid-events">
+            {filtered.map((ev) => {
+              const price =
+                Number.isFinite(ev.precio) && ev.precio > 0
+                  ? new Intl.NumberFormat("es-AR", {
+                      style: "currency",
+                      currency: "ARS",
+                      maximumFractionDigits: 0,
+                    }).format(ev.precio)
+                  : null;
+
+              const img = ev.imagen;
+
+              return (
+                <article
+                  key={ev.id}
+                  className={`catv3-ev-card ${ev.destacado ? "featured" : ""}`}
+                  onClick={() => (window.location.href = `/evento/${ev.id}`)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => (e.key === "Enter" ? (window.location.href = `/evento/${ev.id}`) : null)}
+                >
+                  <div className="catv3-ev-media">
+                    {img ? (
+                      <img
+                        src={img}
+                        alt={ev.titulo || "Evento"}
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          const el = e.currentTarget;
+                          if (!el.dataset.proxied && /^https?:\/\//i.test(img)) {
+                            el.dataset.proxied = "1";
+                            el.src = toProxyUrl(img);
+                            return;
+                          }
+                          el.onerror = null;
+                          el.src = "/assets/bannernegro-cXfYfe60.jpg";
+                        }}
+                      />
+                    ) : (
+                      <div className="catv3-ev-ph">eventour</div>
+                    )}
+                    {ev.destacado && <span className="catv3-badge">★ Destacado</span>}
+                  </div>
+
+                  <div className="catv3-ev-body">
+                    <h3 className="catv3-ev-title">{ev.titulo}</h3>
+                    {ev.descripcion && <p className="catv3-ev-desc">{ev.descripcion}</p>}
+
+                    <div className="catv3-ev-meta">
+                      {ev.fechaInicio && (
+                        <span className="catv3-chip">
+                          {ev.fechaInicio}
+                          {ev.fechaFin && ev.fechaFin !== ev.fechaInicio ? ` → ${ev.fechaFin}` : ""}
+                        </span>
+                      )}
+                      {price && <span className="catv3-chip">{price}</span>}
+                      {ev.categoria && (
+                        <span className="catv3-chip ghost">{LABEL_CAT[ev.categoria] || ev.categoria}</span>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}

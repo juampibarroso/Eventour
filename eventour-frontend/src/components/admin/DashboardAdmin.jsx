@@ -1,79 +1,94 @@
+// src/components/admin/DashboardAdmin.jsx
 import React, { useEffect, useState } from "react";
+import { API_BASE, getJson, del } from "../../lib/api";
+import UbicacionForm from "./UbicacionForm";
 import EventForm from "./EventForm";
-import EventList from "./EventList";
-import UbicacionForm from "../../components/admin/UbicacionForm";
 import "../../styles/Admin.css";
 
-const DashboardAdmin = ({ onLogout }) => {
+export default function DashboardAdmin({ onLogout }) {
   const [eventos, setEventos] = useState([]);
-  const [eventoActual, setEventoActual] = useState(null);
-  const API = import.meta.env.VITE_API_URL;
-
-  const authHeaders = () => {
-    const token = localStorage.getItem("token");
-    return {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      "Authorization": `Bearer ${token}`,
-    };
-  };
+  const [loading, setLoading] = useState(false);
 
   const fetchEventos = async () => {
     try {
-      // GET público según tu SecurityConfig
-      const res = await fetch(`${API}/eventos`);
-      const data = await res.json();
-      setEventos(data);
-    } catch (error) {
-      console.error("Error al obtener eventos:", error);
+      setLoading(true);
+      const data = await getJson(`${API_BASE}/eventos`, { auth: false });
+      setEventos(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("GET eventos error:", e);
+      setEventos([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchEventos();
-  }, []);
-
-  const handleSave = async (evento) => {
-    try {
-      const isEdit = !!evento.id;
-      const url = isEdit ? `${API}/eventos/${evento.id}` : `${API}/eventos`;
-      const method = isEdit ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: authHeaders(),           // ⬅️ token + JSON
-        body: JSON.stringify(evento),
-      });
-
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`Error ${res.status}: ${txt}`);
-      }
-      fetchEventos();
-    } catch (error) {
-      console.error("Error al guardar evento:", error);
-      alert("❌ No se pudo guardar el evento");
-    }
-  };
+  useEffect(() => { fetchEventos(); }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este evento?")) return;
+    if (!confirm("¿Eliminar evento?")) return;
     try {
-      const res = await fetch(`${API}/eventos/${id}`, {
-        method: "DELETE",
-        headers: authHeaders(),           // ⬅️ token
-      });
-
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`Error ${res.status}: ${txt}`);
-      }
+      await del(`${API_BASE}/eventos/${id}`, { auth: true });
       fetchEventos();
-    } catch (error) {
-      console.error("Error al eliminar evento:", error);
-      alert("❌ No se pudo eliminar el evento");
+    } catch (e) {
+      console.error("DELETE evento error:", e);
+      alert("❌ No se pudo eliminar.");
     }
   };
+
+  // ===== Helpers imagen =====
+  const backendBase = (() => {
+    try { return (API_BASE || "/api").replace(/\/api\/?$/i, ""); } catch { return ""; }
+  })();
+
+  const sameHost = (url) => {
+    try {
+      const t = new URL(url, window.location.origin);
+      const front = new URL(window.location.origin).host;
+      const back = backendBase ? new URL(backendBase, window.location.origin).host : null;
+      return t.host === front || (back && t.host === back);
+    } catch { return false; }
+  };
+
+  const normalizeUrl = (raw) => {
+    if (!raw || typeof raw !== "string") return null;
+    let u = raw.trim();
+    if (u.startsWith("//")) u = "https:" + u;
+    if (/^https?:\/\//i.test(u) || u.startsWith("data:")) return u;
+    const base = backendBase || window.location.origin;
+    return `${base}${u.startsWith("/") ? u : "/" + u}`;
+  };
+
+  const toProxy = (absUrl) => {
+    try {
+      const noProto = absUrl.replace(/^https?:\/\//i, "");
+      return `https://images.weserv.nl/?url=${encodeURIComponent(noProto)}&w=1024&h=576&fit=cover`;
+    } catch { return absUrl; }
+  };
+
+  const imgSrc = (ev) => {
+    // probamos MUCHOS aliases
+    const candidatos = [
+      ev?.imagen,
+      ev?.imagenUrl,
+      ev?.urlImagen,
+      ev?.imagenPrincipal,
+      ev?.imageUrl,
+      ev?.imagenURL,
+      ev?.img,
+      ev?.image,
+      Array.isArray(ev?.imagenes) ? ev.imagenes[0] : null,
+    ].filter(Boolean);
+
+    const elegido = candidatos.find((x) => typeof x === "string" && x.trim() !== "");
+    const normalizada = normalizeUrl(elegido);
+
+    if (!normalizada) {
+      // ayuda para debug: mira qué trae el evento
+      console.debug("Evento sin campo de imagen reconocible:", ev);
+    }
+    return normalizada || "/assets/bannernegro-cXfYfe60.jpg";
+  };
+  // ==========================
 
   return (
     <div className="admin-dashboard">
@@ -82,30 +97,81 @@ const DashboardAdmin = ({ onLogout }) => {
         <button className="logout-button" onClick={onLogout}>Cerrar sesión</button>
       </div>
 
-      <section className="admin-section">
-        <h2>Cargar Ubicación</h2>
+      <section className="admin-section card">
+        <h2>Ubicaciones</h2>
         <UbicacionForm />
       </section>
 
-      <section className="admin-section">
+      <section className="admin-section card">
         <h2>Cargar Evento</h2>
-        <EventForm
-          onSave={handleSave}
-          eventoActual={eventoActual}
-          setEventoActual={setEventoActual}
-        />
+        <EventForm onSaved={fetchEventos} />
       </section>
 
-      <section className="admin-section">
-        <h2>Lista de Eventos</h2>
-        <EventList
-          eventos={eventos}
-          onEdit={setEventoActual}
-          onDelete={handleDelete}
-        />
+      <section className="admin-section card">
+        <div className="admin-section-head">
+          <h2>Eventos cargados</h2>
+          <button className="btn-secondary" onClick={fetchEventos} disabled={loading}>
+            {loading ? "Actualizando…" : "Refrescar"}
+          </button>
+        </div>
+
+        {eventos.length === 0 && <p className="no-eventos">No hay eventos.</p>}
+
+        <div className="event-grid">
+          {eventos.map((ev) => {
+            const primary = imgSrc(ev);
+            const isExternal = /^https?:\/\//i.test(primary) && !sameHost(primary);
+            return (
+              <article className="event-card" key={ev.id}>
+                <div className="event-card-media">
+                  <img
+                    src={primary}
+                    alt={ev.titulo || "eventour"}
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      const el = e.currentTarget;
+                      if (el.dataset.proxied === "1" || !isExternal) {
+                        el.onerror = null;
+                        el.src = "/assets/bannernegro-cXfYfe60.jpg";
+                        return;
+                      }
+                      el.dataset.proxied = "1";
+                      el.src = toProxy(primary);
+                    }}
+                  />
+                  {ev.destacado && <span className="badge">Destacado</span>}
+                </div>
+
+                <div className="event-card-body">
+                  <h3 className="event-title">{ev.titulo}</h3>
+                  {ev.descripcion && <p className="event-desc">{ev.descripcion}</p>}
+
+                  <div className="event-meta">
+                    {ev.fechaInicio && (
+                      <span className="chip">
+                        {ev.fechaInicio}{ev.fechaFin ? ` → ${ev.fechaFin}` : ""}
+                      </span>
+                    )}
+                    {typeof ev.precio === "number" && ev.precio > 0 && (
+                      <span className="chip">${ev.precio}</span>
+                    )}
+                    {ev.categoria && <span className="chip ghost">{ev.categoria}</span>}
+                  </div>
+
+                  <div className="event-actions">
+                    <button className="btn-danger" onClick={() => handleDelete(ev.id)}>
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </section>
     </div>
   );
-};
-
-export default DashboardAdmin;
+}

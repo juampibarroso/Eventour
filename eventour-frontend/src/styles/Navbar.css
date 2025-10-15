@@ -1,169 +1,145 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap');
 
+/* ===== Variables globales ===== */
+:root {
+  /* Desktop */
+  --nav-h-desktop: 150px;
+  --nav-pad-y-desktop: 4px;
+
+  /* Mobile (↑ un poco para agrandar el logo) */
+  --nav-h-mobile: 124px;     /* antes 112 */
+  --nav-pad-y-mobile: 3px;   /* antes 2 */
+
+  /* Efectivos */
+  --nav-h: var(--nav-h-desktop);
+  --nav-pad-y: var(--nav-pad-y-desktop);
+}
+
+/* ===== Navbar ===== */
 .navbar {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100px;
-  font-family: 'Montserrat', sans-serif;
+  top: 0; left: 0; width: 100%;
+  height: var(--nav-h);
   z-index: 999;
-  background: rgba(20, 20, 20, 0.1);
+  background: rgba(12,12,12,0.12);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .navbar-container {
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: 1500px;
   height: 100%;
-  display: flex;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* logo | espacio | hamburguesa */
   align-items: center;
-  padding: 0 3rem;
-  justify-content: space-between;
-  position: relative;
-  z-index: 1000;
+  column-gap: 20px;
+
+  padding-left: clamp(24px, 5.5vw, 72px);
+  padding-right: clamp(18px, 4vw, 48px);
+
+  padding-top: var(--nav-pad-y);
+  padding-bottom: var(--nav-pad-y);
 }
 
-.navbar-logo {
-  height: 340px;
-  transition: transform 0.3s ease;
-  cursor: pointer;
-  filter: drop-shadow(0 4px 12px rgba(219, 73, 251, 0.6));
-  z-index: 1000;
+/* Logo ocupa toda la altura disponible menos el aire */
+.brand{ display: inline-flex; align-items: center; height: 100%; }
+.navbar-logo{
+  display: block;
+  height: calc(var(--nav-h) - (var(--nav-pad-y) * 2));
+  width: auto;
+  object-fit: contain;
 }
 
-.navbar-logo:active {
-  transform: scale(1.05);
-}
-
+/* Links (desktop) */
 .nav-links {
+  justify-self: end;
   display: flex;
-  gap: 2rem;
   align-items: center;
-  padding-right: 2vw;
+  gap: clamp(14px, 2.4vw, 28px);
 }
-
-.nav-links a,
-.nav-links .link {
-  position: relative;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 1.15rem;
+.nav-links a {
+  color: #fff;
   text-decoration: none;
-  transition: all 0.3s ease;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1rem, 1.1vw, 1.2rem);
+  position: relative;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
 }
-
 .nav-links a::after {
   content: "";
   position: absolute;
-  left: 0;
-  bottom: -4px;
-  width: 0%;
-  height: 2px;
+  left: 0; bottom: -8px;
+  height: 2px; width: 0%;
   background: linear-gradient(90deg, #db49fb, #ff6ec4);
-  transition: width 0.3s ease;
   border-radius: 2px;
+  transition: width .25s ease;
 }
+.nav-links a:hover::after { width: 100%; }
 
-.nav-links a:hover {
-  text-shadow:
-    0 0 4px #db49fb,
-    0 0 6px #db49fb,
-    0 0 12px #db49fb;
-}
-
-.nav-links a:hover::after {
-  width: 100%;
-}
-
-/* MENU HAMBURGUESA */
-.menu-toggle {
+/* Hamburguesa */
+.menu-toggle{
   display: none;
   flex-direction: column;
-  gap: 6px;
+  justify-self: end;     /* empuja a la derecha */
+  align-self: center;    /* centrada verticalmente */
+  gap: 7px;
   cursor: pointer;
-  z-index: 10001;
+  background: transparent;
+  border: 0;
+  padding: 0;
 }
-
-.menu-toggle .bar {
-  width: 25px;
-  height: 3px;
+.menu-toggle .bar{
+  width: 30px;           /* un poquito más grande */
+  height: 3.5px;
   background-color: #fff;
   transition: all 0.3s ease;
+  border-radius: 2px;
 }
+.menu-toggle .bar.open:nth-child(1){ transform: rotate(45deg) translateY(9px); }
+.menu-toggle .bar.open:nth-child(2){ opacity: 0; }
+.menu-toggle .bar.open:nth-child(3){ transform: rotate(-45deg) translateY(-9px); }
 
-.menu-toggle .bar.open:nth-child(1) {
-  transform: rotate(45deg) translateY(8px);
-}
-
-.menu-toggle .bar.open:nth-child(2) {
-  opacity: 0;
-}
-
-.menu-toggle .bar.open:nth-child(3) {
-  transform: rotate(-45deg) translateY(-8px);
-}
-
-/* RESPONSIVE */
+/* ===== Mobile ===== */
 @media (max-width: 768px) {
-  .navbar-container {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding-top: 0.5rem;
-    position: relative;
-    z-index: 1000;
+  :root {
+    --nav-h: var(--nav-h-mobile);
+    --nav-pad-y: var(--nav-pad-y-mobile);
   }
 
-  .navbar-logo {
-    height: 140px;
-    margin: 0 auto;
-    display: block;
-    padding: 0;
-    z-index: 1000;
+  .navbar-container{
+    grid-template-columns: auto 1fr auto;
+    /* menos padding a la derecha para acercar la hamburguesa al borde */
+    padding-left: clamp(16px, 6vw, 28px);
+    padding-right: clamp(8px, 4vw, 16px);
   }
 
-  .menu-toggle {
-    display: flex;
-    align-self: flex-end;
-    margin-right: 1.5rem;
-    margin-top: -2.5rem;
-    z-index: 10001;
-  }
+  /* seguimos empujando la hamburguesa al extremo derecho */
+  .menu-toggle{ display: flex; justify-self: end; align-self: center; }
 
-  .nav-links {
+  /* Menú desplegable */
+  .nav-links{
     position: fixed;
-    top: 100px;
-    left: 0;
-    z-index: 9999;
-    background: rgba(24, 24, 24, 0.95);
-    width: 100%;
+    top: var(--nav-h);
+    left: 0; right: 0;
+    display: none;
     flex-direction: column;
     align-items: center;
-    padding: 1rem 0;
     gap: 1rem;
-    display: none;
+    padding: 1rem 0 1.25rem;
+    background: rgba(18,18,18,.96);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    animation: slideDown 0.3s ease-out forwards;
+    z-index: 9999;
+    animation: slideDown .25s ease-out forwards;
   }
-
-  .nav-links.active {
-    display: flex;
-  }
+  .nav-links.active{ display: flex; }
+  .nav-links a{ font-weight: 600; font-size: 1rem; }
 }
 
-/* ANIMACIÓN SUAVE AL DESPLEGAR */
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10%); }
+  to   { opacity: 1; transform: translateY(0); }
 }

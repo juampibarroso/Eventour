@@ -1,19 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Eventour</title>
+
+    <!-- Favicon desde /public -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <!-- Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Google Maps (ok) -->
     <script src="https://www.gstatic.com/maps-platform/place-autocomplete-element/v1/place-autocomplete-element.js" defer></script>
-    <link rel="icon" type="image/png" href="../eventour-frontend/favicon.png" />
-
-
-
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyByF2ZxHZlhvKlUSROh5iL1jrRUJ2ynPaM&libraries=marker"></script>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Vite resolverá esto en dev; en prod inyecta /assets/*.js -->
     <script type="module" src="/src/index.jsx"></script>
-    
   </body>
 </html>

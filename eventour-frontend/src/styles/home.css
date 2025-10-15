@@ -1,122 +1,181 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap');
 
+:root{
+  --violeta:#db49fb;
+  --violeta-osc:#8e2de2;
+  --negro:#0b0b0b;
+}
+
+/* Base */
 body {
-  background-color: #ffffff; /* Fondo blanco */
-  color: #db49fb; /* Violeta oscuro */
+  background-color: #ffffff;
+  color: var(--violeta);
   font-family: 'Montserrat', sans-serif;
   margin: 0;
   padding: 0;
 }
 
-.
-/* ======== Contenedor del Banner ======== */
-.banner-container {
+/* ========== Sección Logo + Claim (mobile-first) ========== */
+.banner-section{
   position: relative;
   width: 100%;
-  height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 20px; /* Separación de la nav-bar */
+  /* separa del carrusel y reserva aire para el escalado del logo */
+  padding-block: clamp(16px, 5vw, 40px);
+  display: grid;
+  place-items: center;
 }
 
-/* ======== Texto debajo del Banner ======== */
+/* Contenedor del logo */
+.banner-container {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  /* espacio inferior para que el logo pueda crecer sin pisar el texto */
+  margin-bottom: clamp(14px, 4.5vw, 28px);
+}
+
+/* La imagen del logo debe tener esta clase en BannerLogo */
+.banner-logo{
+  width: min(82vw, 680px);   /* tope desktop y cómodo en móvil */
+  /* si tu archivo no es 16:5, cambialo. El object-fit mantiene proporción */
+  aspect-ratio: 16 / 5;
+  object-fit: contain;
+  display: block;
+
+  /* micro-3D + suavidad */
+  filter: drop-shadow(0 6px 22px rgba(0,0,0,.35));
+  transition: transform .22s ease, filter .22s ease;
+  will-change: transform;
+  transform-origin: center center;
+}
+
+/* Hover Desktop */
+@media (hover:hover){
+  .banner-logo:hover{
+    transform: scale(1.06);
+    filter: drop-shadow(0 10px 28px rgba(0,0,0,.42));
+  }
+}
+
+/* Tap/Active en móvil */
+@media (hover:none){
+  .banner-logo:active{
+    transform: scale(1.03);
+  }
+}
+
+/* Accesibilidad teclado */
+.banner-logo:focus-visible{
+  outline: 2px solid rgba(219,73,251,.8);
+  outline-offset: 6px;
+  transform: scale(1.04);
+}
+
+/* Texto debajo del Logo */
 .banner-text {
   text-align: center;
-  font-size: 3rem;
   font-weight: 700;
-  color: #db49fb; /* Violeta brillante */
-  margin-top: -80px; 
-  margin-bottom: 100px;/* Espaciado adicional */
-  letter-spacing: 1px;
+  letter-spacing: .02em;
+  color: var(--violeta);
+
+  /* Título fluido */
+  font-size: clamp(1.25rem, 3.8vw, 2.25rem);
+
+  /* espacio extra para no chocar con el crecimiento del logo */
+  margin: 0 1rem clamp(10px, 4.2vw, 30px);
 }
 
-/* ======== Contenedor Principal ======== */
+/* ========== Contenedor Principal (si lo usás) ========== */
 .home-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: clamp(12px, 4vw, 32px);
 }
 
-
-
-
-/* ======== Contenedor de los Enlaces ======== */
+/* ======== Enlaces/cuadrículas (sección de búsqueda rápida) ======== */
 .links-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
-  max-width: 900px;
-  margin-top: 30px; /* Más espacio con el texto */
+  display: grid;
+  grid-template-columns: repeat( auto-fit, minmax(240px, 1fr) );
+  gap: clamp(12px, 3vw, 20px);
+  width: min(100%, 980px);
+  margin-top: clamp(16px, 4vw, 30px);
 }
 
-/* ======== Tarjetas de Búsqueda con Íconos ======== */
 .link-card {
-  width: 300px; /* Cuadrado */
   height: 300px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: #db49fb; /* Violeta brillante */
+  background-color: var(--violeta);
   color: white;
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   text-decoration: none;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background-color .22s ease;
   font-weight: 500;
 }
 
-.link-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-  background-color: #8a12a5; /* Púrpura más oscuro */
+@media (hover:hover){
+  .link-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 22px rgba(0,0,0,.18);
+    background-color: #8a12a5;
+  }
 }
 
-/* ======== Estilo de los Títulos dentro de las Tarjetas ======== */
 .link-title {
-  font-size: 1.7rem;
+  font-size: clamp(1.05rem, 2.6vw, 1.35rem);
   font-weight: 600;
   text-align: center;
   margin-top: 10px;
 }
 
-
-/* ======== Íconos en las Tarjetas ======== */
 .icon {
-  font-size: 4.5rem;
-  margin-bottom: 1rem;
-  color: #ddac09; /* Amarillo brillante */
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  margin-bottom: .75rem;
+  color: #ddac09;
 }
 
-/* ======== Botón "Ver Todos los Eventos" ======== */
+/* Botón “Ver todos los eventos” (si lo usás en Home) */
 .event-button-container {
-  
   text-align: center;
-  margin-top: 60px;
-  margin-bottom: 60px;
+  margin-top: clamp(32px, 8vw, 60px);
+  margin-bottom: clamp(32px, 8vw, 60px);
 }
-
 .view-events-button {
-  background: linear-gradient(90deg, #db49fb, #8e2de2);
+  background: linear-gradient(90deg, var(--violeta), var(--violeta-osc));
   color: white;
   padding: 14px 28px;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
   box-shadow: 0 4px 12px rgba(219, 73, 251, 0.3);
   font-family: 'Montserrat', sans-serif;
   letter-spacing: 0.5px;
 }
+@media (hover:hover){
+  .view-events-button:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 10px 22px rgba(219, 73, 251, 0.48);
+  }
+}
+.view-events-button:focus-visible{
+  outline: 2px solid rgba(219,73,251,.9);
+  outline-offset: 4px;
+}
 
-.view-events-button:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 6px 20px rgba(219, 73, 251, 0.5);
+/* ======== Ajustes responsivos extra ======== */
+@media (min-width: 1024px){
+  .banner-section{
+    padding-block: clamp(28px, 4vw, 56px);
+  }
+  .banner-container{
+    margin-bottom: clamp(18px, 2.8vw, 36px);
+  }
 }

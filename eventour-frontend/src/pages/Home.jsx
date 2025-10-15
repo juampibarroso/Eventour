@@ -1,29 +1,30 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import '../styles/Home.css';
+import React from "react";
+import "../styles/Home.css";
 import HeroCarousel from "../components/HeroCarousel";
-import Navbar from "../components/NavBar";
 import BannerLogo from "../components/BannerLogo";
 import Footer from "../components/Footer";
 import SobreNosotros from "../components/SobreNosotros";
 import BusquedaRapida from "../components/BusquedaRapida";
 
-
 const Home = () => {
   return (
     <div>
-      <Navbar />
-      <HeroCarousel />      
-      <BannerLogo />    
+      <HeroCarousel />
 
-      {/* Texto debajo del Banner */}
-      <div className="banner-text">Buscá. Encontrá. Disfrutá.</div>
-    
+      {/* —— Sección Logo + Claim —— */}
+      <section className="banner-section">
+        <div className="banner-container">
+          {/* Asegurate de que dentro de BannerLogo la imagen tenga className="banner-logo" */}
+          <BannerLogo />
+        </div>
+
+        {/* Texto debajo del Logo */}
+        <div className="banner-text">Buscá Encontrá Disfrutá</div>
+      </section>
+
       <BusquedaRapida />
       <SobreNosotros />
       <Footer />
-      
-
     </div>
   );
 };
