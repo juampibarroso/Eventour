@@ -1,100 +1,157 @@
+// src/pages/EventDetailPage.jsx
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import "../styles/EventDetailPage.css";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
-import { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_LIBRARIES } from "../config/googleMapsConfig";
+import { useNavigate, useParams } from "react-router-dom";
+import { API_BASE, getJson } from "../lib/api";
+import "../styles/EventDetail.css";
 
-const mapContainerStyle = {
-  width: "100%",
-  height: "300px",
-  marginTop: "20px",
-  borderRadius: "12px",
-  overflow: "hidden",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+/* ------- helpers ------- */
+const toISO = (d) => {
+  if (!d) return null;
+  const dt = new Date(d);
+  if (Number.isNaN(+dt)) return null;
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, "0");
+  const da = String(dt.getDate()).padStart(2, "0");
+  return `${y}-${m}-${da}`;
 };
 
-const EventDetailPage = () => {
-  const { id } = useParams();
-  const [evento, setEvento] = useState(null);
-  const API = import.meta.env.VITE_API_URL; // ✅ CORREGIDO
+const backendBaseFromApi = (apiBase) => apiBase.replace(/\/api\/?$/i, "");
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+const normalizeUrl = (raw, backendBase) => {
+  if (!raw || typeof raw !== "string") return null;
+  let u = raw.trim();
+  if (u.startsWith("//")) u = "https:" + u;
+  if (!/^https?:\/\//i.test(u)) {
+    return `${backendBase}${u.startsWith("/") ? u : "/" + u}`;
+  }
+  return u;
+};
+
+const toProxy = (absUrl) => {
+  try {
+    const noProto = absUrl.replace(/^https?:\/\//i, "");
+    // hero más alto para detalle
+    return `https://images.weserv.nl/?url=${encodeURIComponent(noProto)}&w=1600&h=680&fit=cover`;
+  } catch {
+    return absUrl;
+  }
+};
+
+const pickImage = (ev, backendBase) => {
+  const candidatos = [
+    ev?.imagen,
+    ev?.imagenUrl,
+    ev?.urlImagen,
+    ev?.imagenPrincipal,
+    Array.isArray(ev?.imagenes) ? ev.imagenes[0] : null,
+  ].filter(Boolean);
+  const found = candidatos.find((x) => typeof x === "string" && x.trim() !== "");
+  return normalizeUrl(found, backendBase) || "/assets/bannernegro-cXfYfe60.jpg";
+};
+
+/* ------- componente ------- */
+export default function EventDetailPage() {
+  const { id } = useParams();
+  const nav = useNavigate();
+
+  const [ev, setEv] = useState(null);
+  const [err, setErr] = useState("");
+  const backendBase = backendBaseFromApi(API_BASE);
 
   useEffect(() => {
-    fetch(`${API}/eventos/${id}`) // ✅ CORREGIDO (sin repetir /api)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Error HTTP: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((data) => setEvento(data))
-      .catch((err) => console.error("Error al cargar el evento", err));
+    let alive = true;
+    (async () => {
+      try {
+        const data = await getJson(`${API_BASE}/eventos/${id}`, { auth: false });
+        if (alive) setEv(data);
+      } catch (e) {
+        console.error("GET /eventos/:id error", e);
+        if (alive) setErr("No se pudo cargar el evento.");
+      }
+    })();
+    return () => { alive = false; };
   }, [id]);
 
-  if (!evento) return <p className="cargando-evento">Cargando evento...</p>;
+  if (err) {
+    return (
+      <main className="evd-page">
+        <div className="evd-spacer" aria-hidden />
+        <div className="evd-wrap"><p className="evd-state">{err}</p></div>
+      </main>
+    );
+  }
+  if (!ev) {
+    return (
+      <main className="evd-page">
+        <div className="evd-spacer" aria-hidden />
+        <div className="evd-wrap"><p className="evd-state">Cargando…</p></div>
+      </main>
+    );
+  }
+
+  const desde = toISO(ev.fechaInicio);
+  const hasta = toISO(ev.fechaFin || ev.fechaInicio);
+  const primary = pickImage(ev, backendBase);
 
   return (
-    <div className="evento-detalle-container">
-      <div className="evento-banner">
-        {evento.imagen && <img src={evento.imagen} alt={evento.titulo} />}
+    <main className="evd-page">
+      {/* deja todo por debajo de la navbar fija */}
+      <div className="evd-spacer" aria-hidden />
+
+      {/* HERO */}
+      <div className="evd-hero">
+        <img
+          src={primary}
+          alt={ev.titulo || "Evento"}
+          loading="eager"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            const el = e.currentTarget;
+            if (!el.dataset.proxied && /^https?:\/\//i.test(primary)) {
+              el.dataset.proxied = "1";
+              el.src = toProxy(primary);
+              return;
+            }
+            el.onerror = null;
+            el.src = "/assets/bannernegro-cXfYfe60.jpg";
+          }}
+        />
       </div>
-      <div className="evento-detalle-contenido">
-        <h1>{evento.titulo.toUpperCase()}.</h1>
-        <hr className="evento-divider" />
 
-        {evento.descripcion && (
-          <p className="evento-descripcion">{evento.descripcion}</p>
-        )}
+      <div className="evd-wrap">
+        <h1 className="evd-title">{ev.titulo || "Evento"}</h1>
+        {ev.descripcion && <p className="evd-desc">{ev.descripcion}</p>}
 
-        <div className="evento-datos">
-          {evento.fechaInicio && evento.fechaFin && (
-            <p>📅 <strong>Fecha:</strong> {evento.fechaInicio} — {evento.fechaFin}</p>
+        <div className="evd-info">
+          {desde && (
+            <div className="evd-row">
+              <div className="evd-key">Fecha</div>
+              <div className="evd-val">
+                {desde}{hasta && ` — ${hasta}`}
+              </div>
+            </div>
           )}
-          {typeof evento.precio === "number" && (
-            <p>💸 <strong>Precio:</strong> ${evento.precio}</p>
+          {Number.isFinite(Number(ev.precio)) && (
+            <div className="evd-row">
+              <div className="evd-key">Precio</div>
+              <div className="evd-val">
+                {new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(ev.precio)}
+              </div>
+            </div>
           )}
-          {typeof evento.estado === "string" && (
-            <p>📌 <strong>Estado:</strong> {evento.estado}</p>
-          )}
-
-          {evento.ubicacion && (
-            <>
-              <p>📍 <strong>Lugar:</strong> {evento.ubicacion.nombre}</p>
-              <p>🌆 <strong>Localidad:</strong> {evento.ubicacion.localidad}</p>
-              <p>🗺️ <strong>Oasis:</strong> {evento.ubicacion.oasis}</p>
-            </>
+          {(ev.ubicacion?.nombre || ev.ubicacionTexto) && (
+            <div className="evd-row">
+              <div className="evd-key">Ubicación</div>
+              <div className="evd-val">{ev.ubicacion?.nombre || ev.ubicacionTexto}</div>
+            </div>
           )}
         </div>
 
-        {isLoaded && evento.ubicacion?.latitud && evento.ubicacion?.longitud && (
-          <div className="evento-mapa-container">
-            <h3>🗺️ Mapa del Evento</h3>
-            <GoogleMap
-              center={{
-                lat: parseFloat(evento.ubicacion.latitud),
-                lng: parseFloat(evento.ubicacion.longitud),
-              }}
-              zoom={14}
-              mapContainerStyle={mapContainerStyle}
-            >
-              <Marker
-                position={{
-                  lat: parseFloat(evento.ubicacion.latitud),
-                  lng: parseFloat(evento.ubicacion.longitud),
-                }}
-              />
-            </GoogleMap>
-          </div>
-        )}
-
-        <Link to="/" className="volver-link">← Volver a eventos</Link>
+        <div className="evd-actions">
+          <button className="back-btn" onClick={() => nav(-1)}>← Volver</button>
+        </div>
       </div>
-    </div>
+    </main>
   );
-};
-
-export default EventDetailPage;
+}

@@ -1,0 +1,65 @@
+/* src/components/admin/EventList.admin.css */
+.adm-empty{
+  color:#bbb; text-align:center; padding: 14px 0 4px;
+}
+
+.adm-list{
+  display: grid;
+  gap: 14px;
+}
+
+.adm-card{
+  border-radius: 14px;
+  background: linear-gradient(180deg, #1b1b1b, #131313);
+  border: 1px solid rgba(255,255,255,.07);
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+  padding: 14px;
+}
+.adm-card.is-featured{
+  border-color: rgba(219,73,251,.5);
+  box-shadow:
+    0 0 0 1px rgba(219,73,251,.18) inset,
+    0 10px 26px rgba(219,73,251,.12),
+    0 6px 18px rgba(0,0,0,.35);
+}
+
+.adm-line{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+
+.adm-title{
+  margin:0;
+  color:#fff;
+  font-weight:800;
+  letter-spacing:.2px;
+  font-size: 18px;
+}
+
+.adm-actions{ display:flex; gap:8px; }
+
+.btn{
+  background:#3fa9f5; color:#fff; border:0;
+  padding: 8px 12px; border-radius: 10px;
+  font-weight: 700; cursor:pointer;
+  transition: transform .15s ease, background .2s ease, opacity .2s ease;
+}
+.btn:hover{ transform: translateY(-1px); }
+.btn:active{ transform: translateY(0); opacity:.9; }
+.btn.tiny{ padding: 6px 10px; font-size: 13px; }
+.btn.danger{ background:#ff4f5e; }
+
+.adm-desc{
+  margin:8px 0 10px; color:#dcdcec; opacity:.9; line-height:1.45;
+}
+
+.adm-meta{ display:flex; flex-wrap:wrap; gap:8px; }
+
+.pill{
+  font-size: 12px; line-height:1;
+  padding: 7px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: #e9e6ff;
+}
+.pill.alt{ background: rgba(181,106,240,.14); border-color: rgba(181,106,240,.28); }
+.pill.star{ background: radial-gradient(120% 160% at 10% 0%, #ff9cfb, #b56af0 60%, #7a55ff 100%); color:#111; font-weight:800; }

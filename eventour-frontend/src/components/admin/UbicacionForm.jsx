@@ -1,141 +1,211 @@
-import { useState, useRef, useCallback } from "react";
-import axios from "axios";
+// src/components/admin/UbicacionForm.jsx
+import React, { useEffect, useRef, useState } from "react";
+import "../../styles/UbicacionForm.css";
+import { Loader } from "@googlemaps/js-api-loader";
+import { API_BASE, postJsonWithFallback, getJson, del as httpDelete } from "../../lib/api";
 
+const OASIS = [
+  "GRAN_MENDOZA",
+  "OASIS_NORTE",
+  "OASIS_SUR",
+  "VALLE_DE_UCO",
+  // "OASIS_ESTE", // dejalo comentado si tu backend NO lo admite
+];
 
-// --- DEBES REEMPLAZAR ESTAS LÍNEAS CON TU INFORMACIÓN ---
-const API = import.meta.env.VITE_API_URL;
-const GOOGLE_MAPS_API_KEY = "AIzaSyByF2ZxHZlhvKlUSROh5iL1jrRUJ2ynPaM"; 
-// --------------------------------------------------------
+export default function UbicacionForm() {
+  const [nombre, setNombre] = useState("");
+  const [oasis, setOasis] = useState("");
+  const [direccion, setDireccion] = useState("");
+  const [lat, setLat] = useState("");
+  const [lng, setLng] = useState("");
 
-const UbicacionForm = () => {
-  const [ubicacion, setUbicacion] = useState({
-    nombre: "",
-    direccion: "",
-    oasis: "",
-    latitud: null,
-    longitud: null,
-  });
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
+  const [lista, setLista] = useState([]);
 
-  const [map, setMap] = useState(null);
-  const [autocomplete, setAutocomplete] = useState(null);
-  const autocompleteInputRef = useRef(null);
+  const mapRef = useRef(null);
+  const inputRef = useRef(null);
+  const markerRef = useRef(null);
+  const mapInstance = useRef(null);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUbicacion((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+  // === Cargar listado de ubicaciones (para ver/eliminar duplicadas)
+  const loadUbicaciones = async () => {
+    try {
+      const data = await getJson(`${API_BASE}/ubicaciones`, { auth: false });
+      setLista(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("GET /ubicaciones error:", e);
+    }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validación básica
-    if (!ubicacion.nombre || !ubicacion.direccion || !ubicacion.oasis) {
-      alert("Por favor completa todos los campos obligatorios");
+  useEffect(() => { loadUbicaciones(); }, []);
+
+  // === Google Maps + Autocomplete (clásico)
+  useEffect(() => {
+    const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!key) {
+      console.warn("VITE_GOOGLE_MAPS_API_KEY no configurada");
       return;
     }
-    
-    try {
-      const token = localStorage.getItem("token");
-      
-      // Crear payload de forma muy explícita
-      const ubicacionPayload = {
-        nombre: ubicacion.nombre.trim(),
-        direccion: ubicacion.direccion.trim(),
-        oasis: ubicacion.oasis,
-        latitud: ubicacion.latitud ? parseFloat(ubicacion.latitud) : null,
-        longitud: ubicacion.longitud ? parseFloat(ubicacion.longitud) : null,
-      };
 
-      console.log("=== DATOS A ENVIAR ===");
-      console.log("Token:", token ? "✅ Presente" : "❌ No encontrado");
-      console.log("API URL:", `${API}/ubicaciones`);
-      console.log("Payload:", JSON.stringify(ubicacionPayload, null, 2));
-      console.log("=====================");
-      
-      // Configuración muy explícita de axios
-      const config = {
-        method: 'POST',
-        url: `${API}/ubicaciones`,
-        data: ubicacionPayload,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      };
+    const loader = new Loader({
+      apiKey: key,
+      version: "weekly",
+      libraries: ["places"],
+    });
 
-      console.log("Config de axios:", config);
-      
-      const response = await axios(config);
-      
-      console.log("✅ Respuesta exitosa:", response.data);
-      alert("✅ Ubicación guardada correctamente");
-      
-      // Reset form
-      setUbicacion({
-        nombre: "",
-        direccion: "",
-        oasis: "",
-        latitud: null,
-        longitud: null,
+    loader.load().then(() => {
+      const map = new google.maps.Map(mapRef.current, {
+        center: { lat: -32.889, lng: -68.845 }, // Mendoza
+        zoom: 13,
+        disableDefaultUI: true,
       });
-      
-    } catch (error) {
-      console.error("=== ERROR COMPLETO ===");
-      console.error("Error:", error);
-      console.error("Message:", error.message);
-      console.error("Response:", error.response);
-      console.error("Status:", error.response?.status);
-      console.error("Data:", error.response?.data);
-      console.error("Headers enviados:", error.config?.headers);
-      console.error("Data enviada:", error.config?.data);
-      console.error("====================");
-      alert(`❌ Error al guardar ubicación: ${error.response?.data?.message || error.message}`);
+      mapInstance.current = map;
+
+      markerRef.current = new google.maps.Marker({ map });
+
+      const ac = new google.maps.places.Autocomplete(inputRef.current, {
+        fields: ["formatted_address", "geometry", "name"],
+        types: ["establishment", "geocode"],
+      });
+
+      ac.addListener("place_changed", () => {
+        const place = ac.getPlace();
+        if (!place || !place.geometry) return;
+
+        const position = {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng(),
+        };
+
+        setDireccion(place.formatted_address || "");
+        setLat(position.lat.toFixed(6));
+        setLng(position.lng.toFixed(6));
+        if (!nombre) setNombre(place.name || "");
+
+        map.panTo(position);
+        map.setZoom(16);
+        markerRef.current.setPosition(position);
+      });
+    });
+  }, []);
+
+  // === Guardar ubicación (JSON) usando los nombres del UbicacionDTO del backend
+  const handleGuardar = async (e) => {
+    e.preventDefault();
+    setError(""); setOk("");
+
+    const latitud = lat === "" ? null : Number(lat);
+    const longitud = lng === "" ? null : Number(lng);
+
+    const payload = {
+      id: null,
+      nombre: nombre?.trim() || null,
+      direccion: direccion?.trim() || null,
+      oasis: oasis || null,
+      latitud,
+      longitud,
+    };
+
+    try {
+      setCargando(true);
+      await postJsonWithFallback(`${API_BASE}/ubicaciones`, payload, { auth: true });
+      setOk("✅ Ubicación creada");
+      setNombre(""); setDireccion(""); setLat(""); setLng(""); setOasis("");
+      if (markerRef.current) markerRef.current.setMap(null);
+      loadUbicaciones();
+    } catch (e) {
+      console.error("Ubicación POST error:", e);
+      setError("No se pudo crear la ubicación. Detalle: " + e.message);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const handleEliminar = async (id) => {
+    if (!confirm("¿Eliminar esta ubicación?")) return;
+    try {
+      await httpDelete(`${API_BASE}/ubicaciones/${id}`, { auth: true });
+      await loadUbicaciones();
+    } catch (e) {
+      alert("No se pudo eliminar. " + e.message);
     }
   };
 
   return (
-    <div className="ubicacion-form-container">
-      <h2>Cargar Nueva Ubicación</h2>
-      <form className="ubicacion-form" onSubmit={handleSubmit}>
+    <div className="ubif-card">
+      <h2>Cargar Ubicación</h2>
+
+      <form className="ubif-form" onSubmit={handleGuardar}>
         <input
-          type="text"
-          name="nombre"
-          placeholder="Nombre del lugar"
-          value={ubicacion.nombre}
-          onChange={handleChange}
-          required
+          ref={inputRef}
+          className="ubif-input"
+          placeholder="Nombre del lugar o dirección"
+          value={direccion}
+          onChange={(e) => setDireccion(e.target.value)}
         />
-        <input
-          ref={autocompleteInputRef}
-          type="text"
-          placeholder="Buscar dirección"
-          className="autocomplete-input"
-          style={{
-            width: "100%",
-            height: "40px",
-            padding: "10px",
-            borderRadius: "6px",
-            border: "none",
-            marginBottom: "10px",
-          }}
-          onChange={(e) => setUbicacion((p) => ({ ...p, direccion: e.target.value }))}
-          value={ubicacion.direccion}
-        />
-        <select name="oasis" value={ubicacion.oasis} onChange={handleChange} required>
-          <option value="">Seleccionar ZONA.</option>
-          <option value="ZONA_ESTE">Zona Este</option>
-          <option value="GRAN_MENDOZA">Gran Mendoza</option>
-          <option value="VALLE_DE_UCO">Valle de Uco</option>
-          <option value="OASIS_SUR">Zona Sur</option>
+
+        <select
+          className="ubif-input"
+          value={oasis}
+          onChange={(e) => setOasis(e.target.value)}
+        >
+          <option value="">Oasis (opcional)</option>
+          {OASIS.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
         </select>
-        <button type="submit">Guardar Ubicación</button>
+
+        <div className="ubif-row">
+          <input
+            className="ubif-input"
+            placeholder="Latitud (opcional)"
+            value={lat}
+            onChange={(e) => setLat(e.target.value)}
+          />
+          <input
+            className="ubif-input"
+            placeholder="Longitud (opcional)"
+            value={lng}
+            onChange={(e) => setLng(e.target.value)}
+          />
+        </div>
+
+        <div ref={mapRef} className="ubif-map" />
+
+        <button className="ubif-btn" disabled={cargando}>
+          {cargando ? "Guardando…" : "Guardar ubicación"}
+        </button>
+
+        {ok && <p className="ubif-ok">{ok}</p>}
+        {error && <p className="ubif-err">❌ {error}</p>}
       </form>
+
+      <div className="ubif-list">
+        <div className="ubif-list-head">
+          <h3>Ubicaciones cargadas</h3>
+          <button className="ubif-mini" onClick={loadUbicaciones}>Refrescar</button>
+        </div>
+
+        {lista.map((u) => (
+          <div key={u.id} className="ubif-item">
+            <div className="ubif-item-txt">
+              <strong>{u.nombre}</strong>
+              <span>{u.direccion || "Sin dirección"}</span>
+              <small>
+                {(u.latitud != null && u.longitud != null)
+                  ? `(${u.latitud}, ${u.longitud})`
+                  : "Sin coordenadas"}
+                {u.oasis ? ` • ${u.oasis}` : ""}
+              </small>
+            </div>
+            <button className="ubif-del" onClick={() => handleEliminar(u.id)}>
+              Eliminar
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
-};
-
-export default UbicacionForm;
+}

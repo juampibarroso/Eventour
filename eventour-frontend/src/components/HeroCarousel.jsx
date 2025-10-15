@@ -1,117 +1,86 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/HeroCarousel.css";
 
-// ✅ Importación de imágenes para que funcionen en producción (Vite)
 import img1 from "../assets/88.png";
 import img2 from "../assets/33.jpg";
 import img3 from "../assets/55.jpg";
-import img4 from "../assets/14.jpg";
+import img4 from "../assets/105.jpg";
 import img5 from "../assets/99.jpg";
-import img6 from "../assets/12.jpg";
+import img6 from "../assets/333.jpg";
 
-// ✅ Lista de slides con imágenes importadas
 const slides = [
-  {
-    id: 1,
-    image: img1,
-    title: "Deportes y Aventura",
-    subtitle: "Maratones, trekking, ciclismo, torneos deportivos y actividades al aire libre.",
-  },
-  {
-    id: 2,
-    image: img2,
-    title: "Gastronomía y Vino",
-    subtitle: "Degustaciones, ferias gastronómicas, festivales de vino y cenas temáticas.",
-  },
-  {
-    id: 3,
-    image: img3,
-    title: "Ferias y Exposiciones",
-    subtitle: "Ferias de emprendedores, artesanías, tecnología, moda y belleza.",
-  },
-  {
-    id: 4,
-    image: img4,
-    title: "Música y Espectáculos",
-    subtitle: "Conciertos, recitales, teatro, danza y cine.",
-  },
-  {
-    id: 5,
-    image: img5,
-    title: "Arte y Cultura",
-    subtitle: "Exposiciones, ferias culturales, presentaciones literarias y actividades tradicionales.",
-  },
-  {
-    id: 6,
-    image: img6,
-    title: "Charlas y Eventos Empresariales",
-    subtitle: "Charlas y eventos empresariales con impacto local e internacional.",
-  },
+  { id: 1, image: img1, title: "Deportes y Aventura", subtitle: "Maratones, trekking, ciclismo, torneos deportivos y actividades al aire libre." },
+  { id: 2, image: img2, title: "Gastronomía y Vino", subtitle: "Degustaciones, ferias gastronómicas, festivales de vino y cenas temáticas." },
+  { id: 3, image: img3, title: "Ferias y Exposiciones", subtitle: "Ferias de emprendedores, artesanías, tecnología, moda y belleza." },
+  { id: 4, image: img4, title: "Música y Espectáculos", subtitle: "Conciertos, recitales, teatro, danza y cine." },
+  { id: 5, image: img5, title: "Arte y Cultura", subtitle: "Exposiciones, ferias culturales, presentaciones literarias y actividades tradicionales." },
+  { id: 6, image: img6, title: "Charlas y Eventos Empresariales", subtitle: "Charlas y eventos empresariales con impacto local e internacional." },
 ];
 
-const AUTO_SLIDE_INTERVAL = 8000;
+const AUTO_SLIDE_INTERVAL = 7000; // un pelín más rápido en móvil
+const EVENTS_ROUTE = "/events";
 
 const HeroCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const timeoutRef = useRef(null);
+  const tRef = useRef(null);
+  const navigate = useNavigate();
 
-  const nextSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? slides.length - 1 : prevIndex - 1
-    );
-  };
-
-  const resetTimeout = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-  };
+  const next = () => setCurrentIndex((p) => (p + 1) % slides.length);
+  const prev = () => setCurrentIndex((p) => (p === 0 ? slides.length - 1 : p - 1));
+  const clear = () => tRef.current && clearTimeout(tRef.current);
 
   useEffect(() => {
-    resetTimeout();
-    timeoutRef.current = setTimeout(() => {
-      nextSlide();
-    }, AUTO_SLIDE_INTERVAL);
-
-    return () => resetTimeout();
+    clear();
+    tRef.current = setTimeout(next, AUTO_SLIDE_INTERVAL);
+    return clear;
   }, [currentIndex]);
 
+  const handleVerEventos = () => {
+    try { navigate(EVENTS_ROUTE); } catch { window.location.href = EVENTS_ROUTE; }
+  };
+
   return (
-    <section className="hero-carousel">
-      {slides.map((slide, index) => (
+    <section className="hero-carousel" aria-roledescription="carousel">
+      {/* Máscara superior para que el navbar se lea y no se vea “duro” el borde */}
+      <div className="hero-gradient-top" aria-hidden="true" />
+
+      {slides.map((s, i) => (
         <div
-          key={slide.id}
-          className={`slide ${index === currentIndex ? "active" : ""}`}
-          style={{ backgroundImage: `url(${slide.image})` }}
+          key={s.id}
+          className={`slide ${i === currentIndex ? "active" : ""}`}
+          style={{ backgroundImage: `url(${s.image})` }}
+          role="group"
+          aria-label={`${i + 1} de ${slides.length}: ${s.title}`}
+          aria-hidden={i !== currentIndex}
         >
-          {index === currentIndex && (
+          {i === currentIndex && (
             <div className="overlay">
-              <h1 className="title fade-text show">{slide.title}</h1>
-              <p className="subtitle fade-text show">{slide.subtitle}</p>
-              <div className="carousel-buttons">
-                <a href="#eventos" className="btn-carousel">Ver Eventos</a>
-              </div>
+              <h1 className="hero-title">{s.title}</h1>
+              <p className="hero-subtitle">{s.subtitle}</p>
+              <button
+                type="button"
+                className="btn-carousel"
+                onClick={handleVerEventos}
+              >
+                Ver Eventos
+              </button>
             </div>
           )}
         </div>
       ))}
 
-      <button className="carousel-nav left" onClick={() => {
-        prevSlide();
-        resetTimeout();
-      }}>
-        ❮
-      </button>
-      <button className="carousel-nav right" onClick={() => {
-        nextSlide();
-        resetTimeout();
-      }}>
-        ❯
-      </button>
+      <button
+        className="carousel-nav left"
+        onClick={() => { prev(); clear(); }}
+        aria-label="Anterior"
+      >❮</button>
+
+      <button
+        className="carousel-nav right"
+        onClick={() => { next(); clear(); }}
+        aria-label="Siguiente"
+      >❯</button>
     </section>
   );
 };
