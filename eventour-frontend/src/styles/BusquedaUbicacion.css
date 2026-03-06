@@ -1,116 +1,86 @@
-/* Estilos Generales */
-.busqueda-container {
-  padding: 7rem 2rem 4rem;
-  background-color: #0f0f0f;
-  color: #f1f1f1;
-  font-family: 'Montserrat', sans-serif;
-  min-height: 100vh;
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+
+:root{
+  --bg:#0b0b0b;
+  --surface:#111113;
+  --text:#f5f5fa;
+  --muted:#cfd1d9;
+  --borda: rgba(255,255,255,.08);
+}
+
+.ub-page{
+  padding-top: var(--nav-h);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  font-family:'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Head */
+.ub-head{
+  width: min(980px, 92vw);
+  margin: clamp(18px, 4vw, 28px) auto 0;
   text-align: center;
 }
-
-.titulo-busqueda {
-  font-size: 2.6rem;
+.ub-title{
+  margin: 0 0 clamp(12px, 3vw, 16px);
   font-weight: 800;
-  background: linear-gradient(90deg, #db49fb, #ff6ec4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 8px rgba(219, 73, 251, 0.3);
-  margin-bottom: 2rem;
+  font-size: clamp(1.6rem, 6.8vw, 2.4rem);
+  color: #f2d7ff;
+  text-shadow: 0 8px 28px rgba(219,73,251,.22);
 }
 
-.input-busqueda {
-  padding: 14px 20px;
-  font-size: 1rem;
+/* Buscador */
+.ub-search{
+  width: min(820px, 92vw);
+  margin: 0 auto;
+  position: relative;
+}
+.ub-pin{
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 1.15rem; opacity: .9;
+}
+.ub-input{
   width: 100%;
-  max-width: 500px;
-  border-radius: 12px;
-  border: 1px solid #555;
-  background-color: #1e1e1e;
-  color: white;
-  margin-bottom: 2rem;
-  transition: all 0.3s ease;
-}
-
-.input-busqueda:focus {
-  border-color: #db49fb;
-  box-shadow: 0 0 10px rgba(219, 73, 251, 0.3);
-  outline: none;
-}
-
-.mapa-contenedor {
-  width: 100%;
-  height: 500px;
-  margin-bottom: 3rem;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-}
-
-.mensaje-cargando,
-.mensaje-vacio {
-  font-size: 1.1rem;
-  color: #ccc;
-  margin: 1.5rem 0;
-}
-
-.lista-eventos {
-  margin-top: 3rem;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: left;
-}
-
-.subtitulo-eventos {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #db49fb;
-  margin-bottom: 1.5rem;
-}
-
-.evento-card {
-  background-color: #1a1a1a;
-  padding: 1.5rem;
+  height: 52px;
+  padding: 0 14px 0 40px;
   border-radius: 14px;
-  border-left: 5px solid #db49fb;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  margin-bottom: 1.5rem;
-  transition: transform 0.3s ease;
-}
-
-.evento-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 20px rgba(219, 73, 251, 0.2);
-}
-
-.evento-card h3 {
+  border: 1px solid var(--borda);
+  background: #151518;
   color: #fff;
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  outline: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,.25) inset;
+}
+.ub-input::placeholder{ color: #9ea0a8; }
+
+/* Mapa */
+.ub-map-wrap{
+  width: min(980px, 92vw);
+  margin: clamp(16px, 3vw, 22px) auto 0;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--borda);
+  box-shadow: 0 12px 32px rgba(0,0,0,.35);
+  background: #0f0f10;
+}
+.ub-map{
+  width: 100%;
+  height: clamp(360px, 58vh, 540px);
 }
 
-.evento-card p {
-  color: #ccc;
-  font-size: 1rem;
-  margin: 0.3rem 0;
+/* Lista debajo del mapa (usaremos .evp-grid de EventListPage.css) */
+.ub-list{
+  width: min(1100px, 92vw);
+  margin: clamp(18px, 4vw, 64px) auto clamp(40px, 8vw, 72px);
 }
 
-@media (max-width: 768px) {
-  .titulo-busqueda {
-    font-size: 2rem;
-  }
-
-  .input-busqueda {
-    font-size: 0.95rem;
-    padding: 12px 16px;
-  }
-
-  .evento-card h3 {
-    font-size: 1.2rem;
-  }
-
-  .evento-card p {
-    font-size: 0.95rem;
-  }
+.ub-loading, .ub-error, .ub-empty{
+  text-align:center; color:#e7e7ee;
+  font-size: 1.05rem;
 }
+.ub-empty-ico{ margin-right: .35rem; }
+
+/* No definimos .ev-card / .ev-thumb / .ev-body aquí
+   para no pisar los estilos compartidos de EventListPage.css */

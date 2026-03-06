@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
+@Table(name = "ubicacion")
 public class Ubicacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,8 +19,9 @@ public class Ubicacion {
     @Column(nullable = true)
     private String direccion;
 
-    @Column(nullable = true)
-    private String ciudad;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private Oasis oasis;
 
     @Column(nullable = true)
     private Double latitud;
@@ -36,10 +38,11 @@ public class Ubicacion {
     public Ubicacion() {
     }
 
-    public Ubicacion( String nombre, String direccion, String ciudad, Double latitud, Double longitud) {
+    public Ubicacion( String nombre, String direccion, Oasis oasis, Double latitud, Double longitud) {
         this.nombre = nombre;
         this.direccion = direccion;
-        this.ciudad = ciudad;
+        
+        this.oasis= oasis;
         this.latitud = latitud;
         this.longitud = longitud;
     }
@@ -68,12 +71,12 @@ public class Ubicacion {
         this.direccion = direccion;
     }
 
-    public String getCiudad() {
-        return ciudad;
+    public Oasis getOasis() {
+        return oasis;
     }
 
-    public void setCiudad(String ciudad) {
-        this.ciudad = ciudad;
+    public void setOasis(Oasis oasis) {
+        this.oasis = oasis;
     }
 
     public Double getLatitud() {

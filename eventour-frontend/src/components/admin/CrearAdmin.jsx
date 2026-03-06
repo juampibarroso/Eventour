@@ -1,4 +1,3 @@
-JEsposito — 6:59 PM
 import React, { useState } from "react";
 import axios from "axios";
 
@@ -6,6 +5,7 @@ const CrearAdmin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const API = import.meta.env.VITE_API_URL;
 
   const handleCrearAdmin = async (e) => {
     e.preventDefault();
@@ -14,15 +14,19 @@ const CrearAdmin = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/usuarios/crearAdmin",
+        `${API}/usuarios/crearAdmin`,
         { username, password },
         {
           headers: {
-            Authorization: Bearer ${token},
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": `Bearer ${token}`,
           },
         }
       );
-      setMensaje(Admin creado correctamente: ${response.data.username});
+      setMensaje(`Admin creado correctamente: ${response.data.username}`);
+      setUsername("");
+      setPassword("");
     } catch (err) {
       console.error(err);
       setMensaje("Error al crear admin");

@@ -11,28 +11,28 @@ const SobreNosotros = () => {
         <div className="qa-item">
           <h3 className="pregunta">🧭 ¿Qué es Eventour?</h3>
           <p className="respuesta">
-            Una guía simple y confiable para enterarte de todos los eventos que pasan en Mendoza. Sin vueltas. Sin perder tiempo.
+            Una plataforma digital que centraliza y organiza todos los eventos de Mendoza. Ofreciendo una experiencia completa para descubrir y planificar tu proxima salida.
           </p>
         </div>
 
         <div className="qa-item">
-          <h3 className="pregunta">🎉 ¿Qué vas a encontrar?</h3>
+          <h3 className="pregunta">🎉 ¿Como puedo bucar eventos?</h3>
           <p className="respuesta">
-            Recitales, charlas, ferias, actividades culturales, deportivas o familiares. Todo en un solo lugar.
+            Utiliza nuestros filtros inteligentes para encontrar eventos por zona geográfica, categoría, fecha y ubicación. Es fácil y rápido!
           </p>
         </div>
 
         <div className="qa-item">
-          <h3 className="pregunta">👥 ¿Para quién es?</h3>
+          <h3 className="pregunta">👥 ¿La informacion es confiable?</h3>
           <p className="respuesta">
-            Para vos, tus amigos, tu familia... y para cualquiera que quiera vivir Mendoza al máximo.
+            Si, los eventos vienen de fuentes verificadas, instituciones publicas o privadas y organizadores reconocidos, garantizando datos actualizados y oficiales.
           </p>
         </div>
 
         <div className="qa-item">
-          <h3 className="pregunta">💡 ¿Por qué lo hacemos?</h3>
+          <h3 className="pregunta">💡 ¿Eventour incluye todos los eventos de Mendoza?</h3>
           <p className="respuesta">
-            Porque creemos que la mejor forma de disfrutar es estar bien informado. Y porque amamos esta provincia tanto como vos.
+            Si. Es la unica guia digital que centraliza y organiza todos los eventos publicos de los 18 departamentos de la provincia.
           </p>
         </div>
       </div>

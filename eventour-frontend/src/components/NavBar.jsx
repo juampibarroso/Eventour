@@ -7,61 +7,43 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
-  const toggleMenu = () => setMenuOpen(!menuOpen);
-
-  // Cierra el menú móvil al navegar
-  const handleCloseMenu = () => setMenuOpen(false);
+  const toggleMenu = () => setMenuOpen(v => !v);
+  const closeMenu  = () => setMenuOpen(false);
 
   return (
-    <nav className="navbar">
-      <div className="navbar-overlay" />
+    <nav className="navbar" role="navigation" aria-label="Barra de navegación">
       <div className="navbar-container">
-        <Link to="/" onClick={handleCloseMenu}>
-          <img src={logo} alt="Eventour Logo" className="navbar-logo" />
+        <Link to="/" onClick={closeMenu} className="brand" aria-label="Inicio">
+          <img src={logo} alt="Eventour" className="navbar-logo" />
         </Link>
 
-        <div className={`nav-links ${menuOpen ? "active" : ""}`}>
-
-          {/* Mostrar "Inicio" solo si no estás en home */}
-          {location.pathname !== "/" && (
-            <Link to="/" onClick={handleCloseMenu}>
-              Inicio
-            </Link>
-          )}
-
-          {/* Buscar Eventos: ancla si estás en home, Link si no */}
+        <div id="primary-nav" className={`nav-links ${menuOpen ? "active" : ""}`}>
+          {location.pathname !== "/" && <Link to="/" onClick={closeMenu}>Inicio</Link>}
           {location.pathname === "/" ? (
-            <a href="#buscar-eventos" onClick={handleCloseMenu}>
-              Buscar Eventos
-            </a>
+            <a href="#buscar-eventos" onClick={closeMenu}>Buscar Eventos</a>
           ) : (
-            <Link to="/#buscar-eventos" onClick={handleCloseMenu}>
-              Buscar Eventos
-            </Link>
+            <Link to="/#buscar-eventos" onClick={closeMenu}>Buscar Eventos</Link>
           )}
-
-          {/* Todos los Eventos */}
-          <Link to="/events" onClick={handleCloseMenu}>
-            Ver Todos los Eventos
-          </Link>
-
-          {/* Sobre Nosotros: ancla si estás en home */}
+          <Link to="/events" onClick={closeMenu}>Ver Todos los Eventos</Link>
           {location.pathname === "/" ? (
-            <a href="#sobre-nosotros" onClick={handleCloseMenu}>
-              Sobre Nosotros
-            </a>
+            <a href="#sobre-nosotros" onClick={closeMenu}>Sobre Nosotros</a>
           ) : (
-            <Link to="/#sobre-nosotros" onClick={handleCloseMenu}>
-              Sobre Nosotros
-            </Link>
+            <Link to="/#sobre-nosotros" onClick={closeMenu}>Sobre Nosotros</Link>
           )}
         </div>
 
-        <div className="menu-toggle" onClick={toggleMenu}>
-          <div className={`bar ${menuOpen ? "open" : ""}`} />
-          <div className={`bar ${menuOpen ? "open" : ""}`} />
-          <div className={`bar ${menuOpen ? "open" : ""}`} />
-        </div>
+        {/* Hamburguesa */}
+        <button
+          className="menu-toggle"
+          onClick={toggleMenu}
+          aria-label="Abrir menú"
+          aria-controls="primary-nav"
+          aria-expanded={menuOpen}
+        >
+          <span className={`bar ${menuOpen ? "open" : ""}`} />
+          <span className={`bar ${menuOpen ? "open" : ""}`} />
+          <span className={`bar ${menuOpen ? "open" : ""}`} />
+        </button>
       </div>
     </nav>
   );

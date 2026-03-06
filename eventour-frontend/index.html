@@ -1,15 +1,34 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Eventour</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
+    <!-- Icono -->
+    <link rel="icon" type="image/png" href="../eventour-frontend/favicon.png" />
+
+    <!-- Fuente y FontAwesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
+
+    <!-- Autocomplete Web Component (opcional, no interfiere) -->
+    <script
+      src="https://www.gstatic.com/maps-platform/place-autocomplete-element/v1/place-autocomplete-element.js"
+      defer
+    ></script>
+
+    <!-- ✅ Google Maps API con Places + Marker -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyByF2ZxHZlhvKlUSROh5iL1jrRUJ2ynPaM&libraries=places,marker&loading=async"
+      defer
+    ></script>
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/index.jsx"></script>
-    
   </body>
 </html>

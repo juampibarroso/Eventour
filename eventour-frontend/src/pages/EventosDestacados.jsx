@@ -1,14 +1,19 @@
 import { useState, useEffect } from "react";
-import "../styles/EventosDestacados.css"; // Importamos el CSS
+import EventCard from "../components/EventCard";
+import "../styles/EventosDestacados.css";
+import "../styles/EventListPage.css"; // Reutilizamos grid y estilos
 
 const EventosDestacados = () => {
-  const [eventos, setEventos] = useState([]);
+  const [eventosDestacados, setEventosDestacados] = useState([]);
+  const API = import.meta.env.VITE_API_URL; // ✅ CORREGIDO
 
-  // Obtener eventos destacados desde el backend
   useEffect(() => {
-    fetch("https://tu-backend.com/api/eventos/destacados") // Modifica con la URL real
+    fetch(`${API}/eventos`) // ✅ CORREGIDO: quitado /api redundante
       .then((res) => res.json())
-      .then((data) => setEventos(data))
+      .then((data) => {
+        const filtrados = data.filter((evento) => evento.destacado === true);
+        setEventosDestacados(filtrados);
+      })
       .catch((error) =>
         console.error("Error al obtener eventos destacados:", error)
       );
@@ -16,24 +21,18 @@ const EventosDestacados = () => {
 
   return (
     <div className="eventos-destacados-container">
-      <h1 className="titulo">Eventos Destacados</h1>
-      <p className="descripcion">Aquí podrás ver los eventos más destacados.</p>
+      <h1 className="titulo">🌟 Eventos Destacados</h1>
+      <p className="descripcion">Descubrí los mejores eventos seleccionados para vos.</p>
 
-      <div className="eventos-container">
-        {eventos.length > 0 ? (
-          <div className="eventos-lista">
-            {eventos.map((evento) => (
-              <div key={evento.id} className="evento-card">
-                <h3 className="evento-titulo">{evento.nombre}</h3>
-                <p className="evento-descripcion">{evento.descripcion}</p>
-                <p className="evento-fecha">{evento.fecha}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="no-eventos">No hay eventos destacados en este momento.</p>
-        )}
-      </div>
+      {eventosDestacados.length > 0 ? (
+        <div className="eventos-grid">
+          {eventosDestacados.map((evento) => (
+            <EventCard key={evento.id} event={evento} />
+          ))}
+        </div>
+      ) : (
+        <p className="no-eventos">No hay eventos destacados en este momento.</p>
+      )}
     </div>
   );
 };

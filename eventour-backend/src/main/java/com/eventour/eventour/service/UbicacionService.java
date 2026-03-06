@@ -13,76 +13,74 @@ public class UbicacionService {
 
     private final UbicacionRepository ubicacionRepository;
 
-    public UbicacionService (UbicacionRepository ubicacionRepository){
+    public UbicacionService(UbicacionRepository ubicacionRepository) {
         this.ubicacionRepository = ubicacionRepository;
     }
 
-    //Crear una ubicacion
-    public UbicacionDTO crearUbicacion(UbicacionDTO ubicacionDTO){
-        Ubicacion ubicacion = new Ubicacion(
-                ubicacionDTO.nombre(),
-                ubicacionDTO.direccion(),
-                ubicacionDTO.ciudad(),
-                ubicacionDTO.latitud(),
-                ubicacionDTO.longitud()
-        );
-        Ubicacion saved = ubicacionRepository.save(ubicacion);
-        return mapToDTO(saved);
+    // Crear
+    public UbicacionDTO crearUbicacion(UbicacionDTO dto) {
+        Ubicacion entity = toEntity(dto);
+        Ubicacion saved = ubicacionRepository.save(entity);
+        return toDTO(saved);
     }
 
-    //listar todas las ubicaciones
-    public List<UbicacionDTO> listarUbicaciones(){
+    // Listar
+    public List<UbicacionDTO> listarUbicaciones() {
         return ubicacionRepository.findAll()
                 .stream()
-                .map(this::mapToDTO)
+                .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
-    //obtener Ubicacion por ID
-    public UbicacionDTO obtenerUbicacionPorId(Long id){
-        Ubicacion ubicacion = ubicacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ubicacion no encontrada por ID: "+ id));
-        return mapToDTO(ubicacion);
+    // Obtener por id
+    public UbicacionDTO obtenerUbicacionPorId(Long id) {
+        Ubicacion entity = ubicacionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada id=" + id));
+        return toDTO(entity);
     }
 
-    public UbicacionDTO actualizarUbicacion(Long id, UbicacionDTO ubicacionDTO){
-        Ubicacion ubicacion = ubicacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ubicacion no encontrada por ID:" + id));
+    // Actualizar
+    public UbicacionDTO actualizarUbicacion(Long id, UbicacionDTO dto) {
+        Ubicacion entity = ubicacionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada id=" + id));
 
-        ubicacion.setNombre(ubicacionDTO.nombre());
-        ubicacion.setDireccion(ubicacionDTO.direccion());
-        ubicacion.setCiudad(ubicacionDTO.ciudad());
-        ubicacion.setLatitud(ubicacionDTO.latitud());
-        ubicacion.setLongitud(ubicacionDTO.longitud());
+        if (dto.nombre() != null) entity.setNombre(dto.nombre());
+        if (dto.direccion() != null) entity.setDireccion(dto.direccion());
+        if (dto.oasis() != null) entity.setOasis(dto.oasis());
+        if (dto.latitud() != null) entity.setLatitud(dto.latitud());
+        if (dto.longitud() != null) entity.setLongitud(dto.longitud());
 
-        Ubicacion updated = ubicacionRepository.save(ubicacion);
-        return mapToDTO(updated);
-
+        Ubicacion updated = ubicacionRepository.save(entity);
+        return toDTO(updated);
     }
 
-    //eliminar ubicacion
+    // Eliminar
     public void eliminarUbicacion(Long id) {
         if (!ubicacionRepository.existsById(id)) {
-            throw new RuntimeException("Ubicación no encontrada con ID: " + id);
+            throw new RuntimeException("Ubicación no encontrada id=" + id);
         }
         ubicacionRepository.deleteById(id);
     }
 
-    //Mapear Ubicacion a UbicacionDTO
-    private UbicacionDTO mapToDTO(Ubicacion ubicacion){
+    // ---------- mapping ----------
+    private UbicacionDTO toDTO(Ubicacion e) {
         return new UbicacionDTO(
-                ubicacion.getId(),
-                ubicacion.getNombre(),
-                ubicacion.getDireccion(),
-                ubicacion.getCiudad(),
-                ubicacion.getLatitud(),
-                ubicacion.getLongitud()
+                e.getId(),
+                e.getNombre(),
+                e.getDireccion(),
+                e.getOasis(),
+                e.getLatitud(),
+                e.getLongitud()
         );
     }
 
-
-
-
-
-
+    private Ubicacion toEntity(UbicacionDTO d) {
+        Ubicacion e = new Ubicacion();
+        e.setNombre(d.nombre());
+        e.setDireccion(d.direccion()); 
+        e.setOasis(d.oasis());         // **requerido** por el controller
+        e.setLatitud(d.latitud());
+        e.setLongitud(d.longitud());
+        return e;
+    }
 }

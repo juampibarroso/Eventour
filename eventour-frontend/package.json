@@ -10,7 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@react-google-maps/api": "^2.20.6",
+    "@googlemaps/js-api-loader": "^1.16.10",
+    "@react-google-maps/api": "^2.20.7",
     "axios": "^1.8.4",
     "eventour-frontend": "file:",
     "font-awesome": "^4.7.0",

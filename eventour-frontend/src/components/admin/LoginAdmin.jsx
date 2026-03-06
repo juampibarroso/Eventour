@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Admin.css";
@@ -6,37 +6,65 @@ import "../../styles/Admin.css";
 const LoginAdmin = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [recordarUsuario, setRecordarUsuario] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const emailGuardado = localStorage.getItem("adminEmailRecordado");
+    if (emailGuardado) {
+      setEmail(emailGuardado);
+      setRecordarUsuario(true);
+    }
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    console.log("🧪 Entró al handleLogin con:", email, password); // Debug
+    setError("");
 
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/login", {
-        username: email,
-        password: password,
-      });
+      const API = import.meta.env.VITE_API_URL;
 
-      const { token, role } = response.data;
-
-      if (role === "ADMIN") {
-        try {
-          localStorage.setItem("token", token);
-          localStorage.setItem("role", role);
-        } catch (err) {
-          console.warn("⚠️ No se pudo acceder a localStorage:", err);
+      const { data } = await axios.post(
+        `${API}/auth/login`,
+        {
+          username: email,        // ⬅️ el backend espera username
+          password: password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
         }
+      );
 
-        onLogin(true);
-        navigate("/admin/dashboard");
-      } else {
-        setError("No tenés permisos de administrador.");
+      const { token, role } = data || {};
+
+      if (!token) {
+        setError("Respuesta inválida del servidor.");
+        return;
       }
+
+      if (role !== "ADMIN") {
+        setError("No tenés permisos de administrador.");
+        return;
+      }
+
+      // guardar credenciales
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+
+      if (recordarUsuario) {
+        localStorage.setItem("adminEmailRecordado", email);
+      } else {
+        localStorage.removeItem("adminEmailRecordado");
+      }
+
+      onLogin?.(true);
+      navigate("/admin/dashboard");
     } catch (err) {
-      console.log("🧪 Error al intentar loguear:", err); // Debug
+      console.error("Error al intentar loguear:", err?.response?.status, err?.response?.data);
       setError("Credenciales incorrectas o servidor no disponible.");
     }
   };
@@ -46,18 +74,32 @@ const LoginAdmin = ({ onLogin }) => {
       <form onSubmit={handleLogin} className="login-form">
         <h2>Iniciar Sesión (Admin)</h2>
         {error && <p className="login-error">{error}</p>}
+
         <input
           type="email"
           placeholder="Correo electrónico"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
+
         <input
           type="password"
           placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
+
+        <label className="recordar-checkbox">
+          <input
+            type="checkbox"
+            checked={recordarUsuario}
+            onChange={(e) => setRecordarUsuario(e.target.checked)}
+          />
+          Recordar usuario
+        </label>
+
         <button type="submit">Ingresar</button>
       </form>
     </div>
