@@ -1,5 +1,5 @@
 // src/ads/bannerConfig.js
-import banner1 from "../assets/banners/banner1.png";
+import banner1 from "../assets/banners/banner1.jpg";
 import banner2 from "../assets/banners/banner2.gif";
 import banner3 from "../assets/banners/banner3.gif";
 import banner4 from "../assets/banners/banner4.gif";
@@ -15,7 +15,7 @@ export const BANNERS_BY_SLOT = {
   HOME_TOP_1: {
     enabled: true,
     alt: "Banner 1",
-    linkUrl: "https://eventour.com.ar",
+    linkUrl: "https://mendozamansodestino.com/",
     imageDesktop: banner1,
     imageMobile: banner1,
   },
