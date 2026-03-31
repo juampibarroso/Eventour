@@ -15,7 +15,15 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
     List<Evento> findByTituloContainingIgnoreCase(String titulo);
 
 
-    @Query("SELECT e FROM Evento e WHERE LOWER(e.titulo) LIKE LOWER(CONCAT('%', :categoria, '%')) OR LOWER(e.descripcion) LIKE LOWER(CONCAT('%', :categoria, '%'))")
+    @Query(
+            value = """
+                    SELECT *
+                    FROM eventos e
+                    WHERE LOWER(e.titulo) LIKE LOWER(CONCAT('%', :categoria, '%'))
+                       OR LOWER(CAST(e.descripcion AS CHAR(10000))) LIKE LOWER(CONCAT('%', :categoria, '%'))
+                    """,
+            nativeQuery = true
+    )
     List<Evento> findByCategoria(@Param("categoria") String categoria);
 
     // Filtrar por rango de fechas
@@ -27,11 +35,19 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
     List<Evento> findByUbicacion(@Param("ubicacionId") Long ubicacionId);
 
     // Combinar filtros (opcional)
-    @Query("SELECT e FROM Evento e WHERE " +
-            "(:categoria IS NULL OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :categoria, '%')) OR LOWER(e.descripcion) LIKE LOWER(CONCAT('%', :categoria, '%'))) AND " +
-            "(:fechaInicio IS NULL OR e.fechaInicio >= :fechaInicio) AND " +
-            "(:fechaFin IS NULL OR e.fechaFin <= :fechaFin) AND " +
-            "(:ubicacionId IS NULL OR e.ubicacion.id = :ubicacionId)")
+    @Query(
+            value = """
+                    SELECT *
+                    FROM eventos e
+                    WHERE (:categoria IS NULL
+                           OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :categoria, '%'))
+                           OR LOWER(CAST(e.descripcion AS CHAR(10000))) LIKE LOWER(CONCAT('%', :categoria, '%')))
+                      AND (:fechaInicio IS NULL OR e.fecha_inicio >= :fechaInicio)
+                      AND (:fechaFin IS NULL OR e.fecha_fin <= :fechaFin)
+                      AND (:ubicacionId IS NULL OR e.ubicacion_id = :ubicacionId)
+                    """,
+            nativeQuery = true
+    )
     List<Evento> findByFiltros(@Param("categoria") String categoria,
                                @Param("fechaInicio") LocalDate fechaInicio,
                                @Param("fechaFin") LocalDate fechaFin,
