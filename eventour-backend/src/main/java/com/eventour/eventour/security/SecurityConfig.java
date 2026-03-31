@@ -61,11 +61,12 @@ public class SecurityConfig {
 
                         .requestMatchers("/error", "/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/eventos/**", "/api/ubicaciones/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/eventos/**", "/api/ubicaciones/**", "/api/banners/public").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/banners/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/whoami").authenticated()
 
-                        .requestMatchers(HttpMethod.POST, "/api/eventos/**", "/api/ubicaciones/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/eventos/**", "/api/ubicaciones/**", "/api/banners/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
 

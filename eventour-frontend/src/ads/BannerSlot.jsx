@@ -1,5 +1,6 @@
 // src/ads/BannerSlot.jsx
-import React, { useMemo } from "react";
+import { useMemo } from "react";
+import PropTypes from "prop-types";
 import "../styles/Banners.css";
 import { BANNERS_BY_SLOT } from "./bannerConfig";
 
@@ -9,8 +10,8 @@ import { BANNERS_BY_SLOT } from "./bannerConfig";
  * - Si no existe o está disabled, muestra placeholder (como tus recuadros).
  * - Usa <picture> para desktop/mobile.
  */
-export default function BannerSlot({ slot, className = "", placeholder = true }) {
-  const banner = useMemo(() => BANNERS_BY_SLOT?.[slot] ?? null, [slot]);
+export default function BannerSlot({ slot, className = "", placeholder = true, bannerMap = BANNERS_BY_SLOT }) {
+  const banner = useMemo(() => bannerMap?.[slot] ?? null, [bannerMap, slot]);
 
   if (!banner || banner.enabled === false) {
     return placeholder ? (
@@ -44,3 +45,10 @@ export default function BannerSlot({ slot, className = "", placeholder = true })
     </div>
   );
 }
+
+BannerSlot.propTypes = {
+  slot: PropTypes.string.isRequired,
+  className: PropTypes.string,
+  placeholder: PropTypes.bool,
+  bannerMap: PropTypes.object,
+};

@@ -1,14 +1,17 @@
 // src/components/admin/DashboardAdmin.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import PropTypes from "prop-types";
 import { API_BASE, getJson, del } from "../../lib/api";
 import { formatDisplayDate, getTicketUrl } from "../../lib/eventDisplay";
 import UbicacionForm from "./UbicacionForm";
 import EventForm from "./EventForm";
+import BannerAdmin from "./BannerAdmin";
 import "../../styles/Admin.css";
 
 export default function DashboardAdmin({ onLogout }) {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   const fetchEventos = async () => {
     try {
@@ -66,6 +69,26 @@ export default function DashboardAdmin({ onLogout }) {
     } catch { return absUrl; }
   };
 
+  const filteredEventos = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return eventos;
+
+    return eventos.filter((ev) => {
+      const haystack = [
+        ev?.titulo,
+        ev?.descripcion,
+        ev?.categoria,
+        ev?.ubicacion?.nombre,
+        ev?.ubicacion?.direccion,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }, [eventos, search]);
+
   const imgSrc = (ev) => {
     // probamos MUCHOS aliases
     const candidatos = [
@@ -98,28 +121,64 @@ export default function DashboardAdmin({ onLogout }) {
         <button className="logout-button" onClick={onLogout}>Cerrar sesión</button>
       </div>
 
-      <section className="admin-section card">
-        <h2>Ubicaciones</h2>
+      <section className="admin-section admin-card">
+        <div className="admin-section-head">
+          <div>
+            <h2>Ubicaciones</h2>
+            <p className="admin-section-copy">Gestioná el mapa de lugares sin ocupar todo el panel.</p>
+          </div>
+        </div>
         <UbicacionForm />
       </section>
 
-      <section className="admin-section card">
-        <h2>Cargar Evento</h2>
+      <section className="admin-section admin-card">
+        <div className="admin-section-head">
+          <div>
+            <h2>Cargar Evento</h2>
+          </div>
+        </div>
         <EventForm onSaved={fetchEventos} />
       </section>
 
-      <section className="admin-section card">
+      <section className="admin-section admin-card">
         <div className="admin-section-head">
-          <h2>Eventos cargados</h2>
+          <div>
+            <h2>Banners publicitarios</h2>
+            <p className="admin-section-copy">Cargá y cambiá los auspiciantes desde el panel sin tocar el código.</p>
+          </div>
+        </div>
+        <BannerAdmin />
+      </section>
+
+      <section className="admin-section admin-card">
+        <div className="admin-section-head">
+          <div>
+            <h2>Eventos cargados</h2>
+            <p className="admin-section-copy">Buscá rápido por nombre y revisá lo publicado en un solo vistazo.</p>
+          </div>
           <button className="btn-secondary" onClick={fetchEventos} disabled={loading}>
             {loading ? "Actualizando…" : "Refrescar"}
           </button>
         </div>
 
+        <div className="admin-events-toolbar">
+          <input
+            className="admin-events-search"
+            type="search"
+            placeholder="Buscar evento por nombre, descripción o categoría"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <span className="admin-events-count">{filteredEventos.length} de {eventos.length} visibles</span>
+        </div>
+
         {eventos.length === 0 && <p className="no-eventos">No hay eventos.</p>}
+        {eventos.length > 0 && filteredEventos.length === 0 && (
+          <p className="no-eventos">No hay eventos que coincidan con esa búsqueda.</p>
+        )}
 
         <div className="event-grid">
-          {eventos.map((ev) => {
+          {filteredEventos.map((ev) => {
             const primary = imgSrc(ev);
             const isExternal = /^https?:\/\//i.test(primary) && !sameHost(primary);
             const ticketUrl = getTicketUrl(ev);
@@ -185,3 +244,7 @@ export default function DashboardAdmin({ onLogout }) {
     </div>
   );
 }
+
+DashboardAdmin.propTypes = {
+  onLogout: PropTypes.func.isRequired,
+};

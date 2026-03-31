@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS banners_publicitarios (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    slot VARCHAR(32) NOT NULL UNIQUE,
+    imagen_url MEDIUMTEXT NOT NULL,
+    link_url VARCHAR(500) NULL,
+    alt VARCHAR(255) NULL,
+    activo BIT(1) NOT NULL DEFAULT b'1'
+);

@@ -1,6 +1,4 @@
-import React from "react";
-// Nota: en producción (Linux) el filesystem es case-sensitive.
-// El archivo real es "home.css".
+import { useEffect, useState } from "react";
 import "../styles/home.css";
 import HeroCarousel from "../components/HeroCarousel";
 import BannerLogo from "../components/BannerLogo";
@@ -8,35 +6,60 @@ import Footer from "../components/Footer";
 import SobreNosotros from "../components/SobreNosotros";
 import BusquedaRapida from "../components/BusquedaRapida";
 import BannerBlock from "../ads/BannerBlock";
-
+import { API_BASE, getJson } from "../lib/api";
+import { buildBannerMap } from "../lib/banners";
 
 const Home = () => {
+  const [bannerMap, setBannerMap] = useState(() => buildBannerMap());
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const data = await getJson(`${API_BASE}/banners/public`, { auth: false });
+        if (!cancelled) {
+          setBannerMap(buildBannerMap(Array.isArray(data) ? data : []));
+        }
+      } catch (error) {
+        console.error("GET /banners/public error:", error);
+        if (!cancelled) {
+          setBannerMap(buildBannerMap());
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
-    <div>
+    <main className="home-page">
       <HeroCarousel />
 
-      {/* —— Sección Logo + Claim —— */}
-      <section className="banner-section">
+      <section className="banner-section" aria-label="Presentacion Eventour">
+        <div className="banner-transition" aria-hidden="true">
+          <span className="banner-transition-line" />
+        </div>
         <div className="banner-container">
-          {/* Asegurate de que dentro de BannerLogo la imagen tenga className="banner-logo" */}
           <BannerLogo />
         </div>
-
-        {/* Texto debajo del Logo */}
-        <div className="banner-text">Buscá Encontrá Disfrutá</div>
       </section>
 
-      {/* Banners (debajo del logo, arriba de la búsqueda rápida) */}
-      <BannerBlock slots={["HOME_TOP_1", "HOME_TOP_2"]} />
+      <section className="home-strip">
+        <BannerBlock slots={["HOME_TOP_1", "HOME_TOP_2"]} bannerMap={bannerMap} />
+      </section>
 
       <BusquedaRapida />
 
-      {/* Banners (entre búsqueda rápida y “¿Quiénes somos?”) */}
-      <BannerBlock slots={["HOME_MID_1", "HOME_MID_2"]} />
+      <section className="home-strip">
+        <BannerBlock slots={["HOME_MID_1", "HOME_MID_2"]} bannerMap={bannerMap} />
+      </section>
 
       <SobreNosotros />
       <Footer />
-    </div>
+    </main>
   );
 };
 
