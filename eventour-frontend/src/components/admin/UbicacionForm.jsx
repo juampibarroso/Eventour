@@ -1,9 +1,10 @@
 // src/components/admin/UbicacionForm.jsx
+/* global google */
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../../styles/UbicacionForm.css";
 import { Loader } from "@googlemaps/js-api-loader";
 import { API_BASE, postJsonWithFallback, getJson, del as httpDelete } from "../../lib/api";
-import { OASIS_LABELS, OASIS_ORDER, sortLocations } from "../../lib/locations";
+import { OASIS_LABELS, OASIS_ORDER, getAvailableOases, sortLocations } from "../../lib/locations";
 
 export default function UbicacionForm() {
   const [nombre, setNombre] = useState("");
@@ -16,12 +17,36 @@ export default function UbicacionForm() {
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [lista, setLista] = useState([]);
+  const [busquedaLista, setBusquedaLista] = useState("");
+  const [oasisLista, setOasisLista] = useState("");
+  const [listaVisible, setListaVisible] = useState(false);
 
   const mapRef = useRef(null);
   const inputRef = useRef(null);
   const markerRef = useRef(null);
   const mapInstance = useRef(null);
   const listaOrdenada = useMemo(() => sortLocations(lista), [lista]);
+  const oasisDisponibles = useMemo(() => getAvailableOases(listaOrdenada), [listaOrdenada]);
+
+  const listaFiltrada = useMemo(() => {
+    const q = busquedaLista.trim().toLowerCase();
+    return listaOrdenada.filter((location) => {
+      const matchesOasis = oasisLista ? location.oasis === oasisLista : true;
+      if (!matchesOasis) return false;
+      if (!q) return true;
+
+      const haystack = [
+        location.nombre,
+        location.direccion,
+        OASIS_LABELS[location.oasis] || location.oasis,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(q);
+    });
+  }, [busquedaLista, listaOrdenada, oasisLista]);
 
   const buildFriendlyError = (rawMessage) => {
     if (!rawMessage) {
@@ -91,7 +116,7 @@ export default function UbicacionForm() {
         setDireccion(place.formatted_address || "");
         setLat(position.lat.toFixed(6));
         setLng(position.lng.toFixed(6));
-        if (!nombre) setNombre(place.name || "");
+        setNombre((current) => current || place.name || "");
 
         map.panTo(position);
         map.setZoom(16);
@@ -140,6 +165,20 @@ export default function UbicacionForm() {
     } catch (e) {
       alert("No se pudo eliminar. " + e.message);
     }
+  };
+
+  const getCompactAddress = (location) => {
+    if (!location?.direccion) return "Sin dirección";
+
+    const parts = location.direccion
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (parts.length === 0) return "Sin dirección";
+    if (parts.length === 1) return parts[0];
+
+    return `${parts[0]} · ${parts[1]}`;
   };
 
   return (
@@ -191,30 +230,86 @@ export default function UbicacionForm() {
         {error && <p className="ubif-err">❌ {error}</p>}
       </form>
 
-      <div className="ubif-list">
-        <div className="ubif-list-head">
-          <h3>Ubicaciones cargadas</h3>
-          <button className="ubif-mini" onClick={loadUbicaciones}>Refrescar</button>
-        </div>
-
-        {listaOrdenada.map((u) => (
-          <div key={u.id} className="ubif-item">
-            <div className="ubif-item-txt">
-              <strong>{u.nombre}</strong>
-              <span>{u.direccion || "Sin dirección"}</span>
-              <small>
-                {(u.latitud != null && u.longitud != null)
-                  ? `(${u.latitud}, ${u.longitud})`
-                  : "Sin coordenadas"}
-                {u.oasis ? ` • ${OASIS_LABELS[u.oasis] || u.oasis}` : ""}
-              </small>
-            </div>
-            <button className="ubif-del" onClick={() => handleEliminar(u.id)}>
-              Eliminar
-            </button>
+      <details className="ubif-panel" open={listaVisible} onToggle={(e) => setListaVisible(e.currentTarget.open)}>
+        <summary className="ubif-panel-summary">
+          <div>
+            <strong>Ubicaciones cargadas</strong>
+            <span>{listaFiltrada.length} de {listaOrdenada.length} visibles</span>
           </div>
-        ))}
-      </div>
+          <span className="ubif-panel-toggle">{listaVisible ? "Ocultar" : "Mostrar"}</span>
+        </summary>
+
+        <div className="ubif-list">
+          <div className="ubif-list-head">
+            <div>
+              <h3>Listado compacto</h3>
+              <p className="ubif-list-sub">Buscá rápido, filtrá por zona y abrí solo lo que necesites.</p>
+            </div>
+            <button className="ubif-mini" type="button" onClick={loadUbicaciones}>Refrescar</button>
+          </div>
+
+          <div className="ubif-list-tools">
+            <input
+              className="ubif-input"
+              placeholder="Buscar por nombre o dirección"
+              value={busquedaLista}
+              onChange={(e) => setBusquedaLista(e.target.value)}
+            />
+
+            <select
+              className="ubif-input"
+              value={oasisLista}
+              onChange={(e) => setOasisLista(e.target.value)}
+            >
+              <option value="">Todas las zonas</option>
+              {oasisDisponibles.map((value) => (
+                <option key={value} value={value}>{OASIS_LABELS[value] || value}</option>
+              ))}
+            </select>
+          </div>
+
+          {listaFiltrada.length === 0 ? (
+            <p className="ubif-empty">No hay ubicaciones para ese filtro.</p>
+          ) : (
+            listaFiltrada.map((u) => (
+              <details key={u.id} className="ubif-item">
+                <summary className="ubif-item-summary">
+                  <div className="ubif-item-main">
+                    <strong>{u.nombre || "Ubicación sin nombre"}</strong>
+                    <span>{getCompactAddress(u)}</span>
+                  </div>
+
+                  <div className="ubif-item-side">
+                    {u.oasis && (
+                      <span className="ubif-chip">{OASIS_LABELS[u.oasis] || u.oasis}</span>
+                    )}
+                    <button
+                      type="button"
+                      className="ubif-del"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleEliminar(u.id);
+                      }}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </summary>
+
+                <div className="ubif-item-details">
+                  <p>{u.direccion || "Sin dirección completa"}</p>
+                  <small>
+                    {(u.latitud != null && u.longitud != null)
+                      ? `Lat ${u.latitud} · Lng ${u.longitud}`
+                      : "Sin coordenadas"}
+                  </small>
+                </div>
+              </details>
+            ))
+          )}
+        </div>
+      </details>
     </div>
   );
 }

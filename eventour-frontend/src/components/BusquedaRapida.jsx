@@ -1,36 +1,74 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import "../styles/BusquedaRapida.css";
+import stageBg from "../assets/88.png";
+
+const links = [
+  {
+    to: "/busqueda-ubicacion",
+    className: "ubicacion",
+    icon: "fas fa-map-marker-alt",
+    eyebrow: "Explorá por zona",
+    title: "Ubicaciones",
+    description: "Encontrá eventos por zona o lugar.",
+    action: "Explorar lugares",
+  },
+  {
+    to: "/busqueda-categoria",
+    className: "categoria",
+    icon: "fas fa-tags",
+    eyebrow: "Elegí una temática",
+    title: "Categorías",
+    description: "Elegí el tipo de evento que querés ver.",
+    action: "Ver categorías",
+  },
+  {
+    to: "/busqueda-fecha",
+    className: "fecha",
+    icon: "fas fa-calendar-alt",
+    eyebrow: "Ordená tu agenda",
+    title: "Fechas",
+    description: "Buscá por día o por rango de fechas.",
+    action: "Elegir fecha",
+  },
+  {
+    to: "/eventos-destacados",
+    className: "destacados",
+    icon: "fas fa-star",
+    eyebrow: "Imperdibles",
+    title: "Destacados",
+    description: "Mirá una selección de eventos recomendados.",
+    action: "Ver selección",
+  },
+];
 
 const BusquedaRapida = () => {
   return (
     <section className="busqueda-rapida-section" id="buscar-eventos">
-      <h2 className="busqueda-titulo">¿Qué querés explorar?</h2>
+      <div className="busqueda-head">
+        <h2 className="busqueda-titulo">¿Qué querés explorar?</h2>
+      </div>
 
-      <div className="busqueda-grid">
-        <Link to="/busqueda-ubicacion" className="busqueda-card ubicacion">
-          <i className="fas fa-map-marker-alt icono" />
-          <h3 className="busqueda-label">Por Ubicación</h3>
-          <p className="busqueda-desc">	Busca eventos cerca tuyo o en tu zona preferida.</p>
-        </Link>
+      <div
+        className="busqueda-stage"
+        style={{ "--busqueda-stage-bg": `url(${stageBg})` }}
+      >
+        <div className="busqueda-grid">
+          {links.map((item) => (
+            <Link key={item.to} to={item.to} className={`busqueda-card ${item.className}`}>
+              <div className="busqueda-card-top">
+                <span className="busqueda-eyebrow">{item.eyebrow}</span>
+                <i className={`${item.icon} icono`} />
+              </div>
 
-        <Link to="/busqueda-categoria" className="busqueda-card categoria">
-          <i className="fas fa-tags icono" />
-          <h3 className="busqueda-label">Por Categoría</h3>
-          <p className="busqueda-desc">	Filtrá por el tipo de evento que más te guste.</p>
-        </Link>
+              <div className="busqueda-copy">
+                <h3 className="busqueda-label">{item.title}</h3>
+                <p className="busqueda-desc">{item.description}</p>
+              </div>
 
-        <Link to="/busqueda-fecha" className="busqueda-card fecha">
-          <i className="fas fa-calendar-alt icono" />
-          <h3 className="busqueda-label">Por Fecha</h3>
-          <p className="busqueda-desc">	Encontrá qué hacer en la fecha que elijas.</p>
-        </Link>
-
-        <Link to="/eventos-destacados" className="busqueda-card destacados">
-          <i className="fas fa-star icono" />
-          <h3 className="busqueda-label">Destacados</h3>
-          <p className="busqueda-desc">	Descubrí eventos imperdibles seleccionados para vos.</p>
-        </Link>
+              <span className="busqueda-action">{item.action}</span>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE, getJson } from "../lib/api";
+import { CATEGORY_LABELS, isSupportedCategory } from "../lib/categories";
 import { formatDisplayDate, getTicketUrl, toISODate } from "../lib/eventDisplay";
 import "../styles/BusquedaUbicacion.css";
 
@@ -98,7 +99,8 @@ export default function BusquedaUbicacion() {
         ]);
         if (!alive) return;
         setUbis(Array.isArray(us) ? us.map(normUbi) : []);
-        setEvents(Array.isArray(es) ? es.map(normEvent) : []);
+        const normalized = Array.isArray(es) ? es.map(normEvent) : [];
+        setEvents(normalized.filter((event) => isSupportedCategory(event.categoria)));
       } catch (e) {
         console.error(e);
         if (alive) setErr("No se pudieron cargar ubicaciones/eventos.");
@@ -297,7 +299,7 @@ export default function BusquedaUbicacion() {
 
                     <div className="ev-chips">
                       {desde && <span className="chip">{formatDisplayDate(desde)}</span>}
-                      {ev.categoria && <span className="chip ghost">{ev.categoria}</span>}
+                      {ev.categoria && <span className="chip ghost">{CATEGORY_LABELS[ev.categoria] || ev.categoria}</span>}
                     </div>
 
                     {ev.linkEntradas && (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import EventCard from "../components/EventCard";
 import { API_BASE } from "../lib/api";
+import { isSupportedCategory } from "../lib/categories";
 import "../styles/EventosDestacados.css";
 import "../styles/EventListPage.css"; // Reutilizamos grid y estilos
 
@@ -11,7 +12,11 @@ const EventosDestacados = () => {
     fetch(`${API_BASE}/eventos`)
       .then((res) => res.json())
       .then((data) => {
-        const filtrados = data.filter((evento) => evento.destacado === true);
+        const filtrados = data.filter(
+          (evento) =>
+            evento.destacado === true &&
+            isSupportedCategory(evento.categoria ?? evento.categoriaEvento ?? evento.category)
+        );
         setEventosDestacados(filtrados);
       })
       .catch((error) =>

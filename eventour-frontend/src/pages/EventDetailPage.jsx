@@ -2,7 +2,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_BASE, getJson } from "../lib/api";
+import { CATEGORY_LABELS } from "../lib/categories";
 import { formatDisplayDate, getTicketUrl } from "../lib/eventDisplay";
+import { OASIS_LABELS } from "../lib/locations";
 import "../styles/EventDetail.css";
 
 const backendBaseFromApi = (apiBase) => apiBase.replace(/\/api\/?$/i, "");
@@ -37,6 +39,43 @@ const pickImage = (ev, backendBase) => {
   ].filter(Boolean);
   const found = candidatos.find((x) => typeof x === "string" && x.trim() !== "");
   return normalizeUrl(found, backendBase) || "/assets/bannernegro-cXfYfe60.jpg";
+};
+
+const normalizeCoord = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const getLocationPreview = (event) => {
+  const ubicacion = event?.ubicacion ?? {};
+  const nombre = ubicacion?.nombre || event?.ubicacionTexto || "";
+  const direccion = ubicacion?.direccion || "";
+  const oasis = ubicacion?.oasis || "";
+  const lat = normalizeCoord(ubicacion?.latitud ?? ubicacion?.lat);
+  const lng = normalizeCoord(ubicacion?.longitud ?? ubicacion?.lng);
+
+  return {
+    nombre,
+    direccion,
+    oasis,
+    lat,
+    lng,
+  };
+};
+
+const getMapQuery = ({ nombre, direccion, lat, lng }) => {
+  if (lat != null && lng != null) return `${lat},${lng}`;
+  return [nombre, direccion].filter(Boolean).join(", ");
+};
+
+const buildMapEmbedUrl = (location) => {
+  const query = getMapQuery(location);
+  return query ? `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed` : null;
+};
+
+const buildExternalMapUrl = (location) => {
+  const query = getMapQuery(location);
+  return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : null;
 };
 
 /* ------- componente ------- */
@@ -82,6 +121,14 @@ export default function EventDetailPage() {
   const fechaInicio = formatDisplayDate(ev.fechaInicio);
   const ticketUrl = getTicketUrl(ev);
   const primary = pickImage(ev, backendBase);
+  const locationPreview = getLocationPreview(ev);
+  const mapEmbedUrl = buildMapEmbedUrl(locationPreview);
+  const mapExternalUrl = buildExternalMapUrl(locationPreview);
+  const categoryLabel = CATEGORY_LABELS[ev.categoria] || ev.categoria;
+  const oasisLabel = OASIS_LABELS[locationPreview.oasis] || locationPreview.oasis;
+  const showMapSection = Boolean(mapEmbedUrl || locationPreview.nombre);
+  const showLocationRow = Boolean(locationPreview.nombre) && !showMapSection;
+  const hasPrimaryActions = Boolean(ticketUrl);
 
   return (
     <main className="evd-page">
@@ -110,34 +157,97 @@ export default function EventDetailPage() {
       </div>
 
       <div className="evd-wrap">
-        <h1 className="evd-title">{ev.titulo || "Evento"}</h1>
-        {ev.descripcion && <p className="evd-desc">{ev.descripcion}</p>}
-        {ticketUrl && (
-          <div className="evd-ticket-block">
-            <a
-              className="evd-ticket-action"
-              href={ticketUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Comprar entradas
-            </a>
-          </div>
-        )}
+        <div className="evd-shell">
+          <section className="evd-main-card">
+            <div className="evd-meta">
+              {fechaInicio && <span className="evd-chip">Fecha: {fechaInicio}</span>}
+              {ev.categoria && <span className="evd-chip ghost">{categoryLabel}</span>}
+              {locationPreview.oasis && <span className="evd-chip ghost">{oasisLabel}</span>}
+            </div>
 
-        <div className="evd-info">
-          {fechaInicio && (
-            <div className="evd-row">
-              <div className="evd-key">Fecha</div>
-              <div className="evd-val">{fechaInicio}</div>
+            <h1 className="evd-title">{ev.titulo || "Evento"}</h1>
+            {ev.descripcion && (
+              <div className="evd-desc-shell">
+                <p className="evd-desc">{ev.descripcion}</p>
+              </div>
+            )}
+
+            {hasPrimaryActions && (
+              <div className="evd-action-bar">
+                {ticketUrl && (
+                  <a
+                    className="evd-ticket-action"
+                    href={ticketUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Comprar entradas
+                  </a>
+                )}
+              </div>
+            )}
+
+            <div className={`evd-info ${showLocationRow ? "" : "evd-info-single"}`.trim()}>
+              {fechaInicio && (
+                <div className="evd-row">
+                  <div className="evd-key">Fecha</div>
+                  <div className="evd-val">{fechaInicio}</div>
+                </div>
+              )}
+              {showLocationRow && (
+                <div className="evd-row">
+                  <div className="evd-key">Ubicación</div>
+                  <div className="evd-val">
+                    <strong>{locationPreview.nombre}</strong>
+                    {locationPreview.direccion && (
+                      <span className="evd-subval">{locationPreview.direccion}</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-          {(ev.ubicacion?.nombre || ev.ubicacionTexto) && (
-            <div className="evd-row">
-              <div className="evd-key">Ubicación</div>
-              <div className="evd-val">{ev.ubicacion?.nombre || ev.ubicacionTexto}</div>
-            </div>
-          )}
+
+            {showMapSection && (
+              <section className="evd-map-card">
+                <div className="evd-map-head">
+                  <div>
+                    <p className="evd-map-kicker">Ubicación</p>
+                    <h2 className="evd-map-title">Dónde es</h2>
+                  </div>
+                </div>
+
+                {mapEmbedUrl ? (
+                  <div className="evd-map-frame">
+                    <iframe
+                      title={`Mapa de ${locationPreview.nombre || ev.titulo || "evento"}`}
+                      src={mapEmbedUrl}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
+                  </div>
+                ) : null}
+
+                <div className="evd-map-copy">
+                  {locationPreview.nombre && <strong>{locationPreview.nombre}</strong>}
+                  {locationPreview.direccion && <span>{locationPreview.direccion}</span>}
+                  {oasisLabel && <small>{oasisLabel}</small>}
+                </div>
+
+                {mapExternalUrl && (
+                  <div className="evd-map-actions">
+                    <a
+                      className="evd-map-action"
+                      href={mapExternalUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Abrir mapa
+                    </a>
+                  </div>
+                )}
+              </section>
+            )}
+          </section>
         </div>
 
         <div className="evd-actions">

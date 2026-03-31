@@ -170,7 +170,7 @@ export default function BannerAdmin() {
           <div className="admin-form-block-head">
             <div>
               <h4>Banner</h4>
-              <p>Pegá la URL del sponsor y asignala a uno de los espacios de la home.</p>
+              <p>Elegí el espacio y cargá la pieza.</p>
             </div>
           </div>
 
@@ -198,7 +198,7 @@ export default function BannerAdmin() {
           </div>
 
           <label className="admin-field">
-            <span>Banner publicitario</span>
+            <span>Imagen del banner</span>
             <input
               type="text"
               name="imagenUrl"
@@ -209,11 +209,11 @@ export default function BannerAdmin() {
             />
           </label>
           <div className="admin-field-hint">
-            <span>Podés pegar una URL o usar una imagen local.</span>
+            <span>URL o archivo local.</span>
           </div>
 
           <label className="admin-field">
-            <span>Archivo desde tu computadora</span>
+            <span>Archivo local</span>
             <input
               type="file"
               accept="image/*,.gif,.webp,.avif"
@@ -221,9 +221,8 @@ export default function BannerAdmin() {
             />
           </label>
           <div className="admin-field-hint">
-            <span>Formatos sugeridos: JPG, PNG, WEBP o GIF. Límite: 8 MB.</span>
-            <span>{selectedFileName ? `Archivo cargado: ${selectedFileName}` : "También puedes reutilizar los banners actuales desde tu carpeta src/assets/banners."}</span>
-            <span>Si una web externa bloquea la imagen, usa el archivo local para evitar restricciones de hotlink.</span>
+            <span>JPG, PNG, WEBP o GIF. Máx. 8 MB.</span>
+            <span>{selectedFileName ? `Archivo: ${selectedFileName}` : "Si una URL falla, usa archivo local."}</span>
           </div>
 
           <label className="admin-field">
@@ -231,7 +230,7 @@ export default function BannerAdmin() {
             <input
               type="url"
               name="linkUrl"
-              placeholder="https://... (si lo dejás vacío redirige a Eventour)"
+              placeholder="https://... (vacío = Eventour)"
               value={form.linkUrl}
               onChange={onChange}
             />
@@ -241,7 +240,7 @@ export default function BannerAdmin() {
             <input type="checkbox" name="activo" checked={form.activo} onChange={onChange} />
             <span>
               <strong>Banner activo</strong>
-              <small>Si lo apagás, ese espacio queda libre o usa el fallback actual.</small>
+              <small>Si lo apagás, vuelve el fallback.</small>
             </span>
           </label>
         </section>
@@ -250,7 +249,7 @@ export default function BannerAdmin() {
           <div className="admin-form-block-head">
             <div>
               <h4>Vista previa</h4>
-              <p>Revisá cómo se verá antes de guardarlo.</p>
+              <p>Revisá el banner antes de guardar.</p>
             </div>
           </div>
 

@@ -1,20 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { API_BASE, getJson } from "../lib/api";
+import { CATEGORY_LABELS, CATEGORY_OPTIONS, isSupportedCategory } from "../lib/categories";
 import { formatDisplayDate, getTicketUrl, toISODate } from "../lib/eventDisplay";
 import "../styles/BusquedaCategoria.css";
 
-/** Catálogo = exactamente los valores que guarda el backend */
-const CATS = [
-  { value: "ARTEYCULTURA", label: "Arte y Cultura", icon: "🎨" },
-  { value: "CHARLASYEVENTOSEMPRESARIALES", label: "Charlas y Eventos Empr.", icon: "💼" },
-  { value: "DEPORTESYAVENTURA", label: "Deportes y Aventura", icon: "🏃" },
-  { value: "FERIASYEXPOSICIONES", label: "Ferias y Exposiciones", icon: "🧺" },
-  { value: "GASTRONOMIAYVINO", label: "Gastronomía y Vino", icon: "🍷" },
-  { value: "MUSICAYESPECTACULOS", label: "Música y Espectáculos", icon: "🎵" },
-];
+const CATS = CATEGORY_OPTIONS;
 
-const LABEL_CAT = Object.fromEntries(CATS.map(c => [c.value, c.label]));
+const LABEL_CAT = CATEGORY_LABELS;
 
 const normalizeEvent = (raw) => {
   const titulo = raw.titulo ?? raw.title ?? raw.nombre ?? "";
@@ -60,6 +53,7 @@ const toProxyUrl = (absoluteUrl) => {
 };
 
 export default function BusquedaCategoria() {
+  const nav = useNavigate();
   const [params, setParams] = useSearchParams();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +70,8 @@ export default function BusquedaCategoria() {
         // ⚠️ Igual que en tu EventForm: SIEMPRE API_BASE
         const data = await getJson(`${API_BASE}/eventos`, { auth: false });
         if (!alive) return;
-        setEvents(Array.isArray(data) ? data.map(normalizeEvent) : []);
+        const normalized = Array.isArray(data) ? data.map(normalizeEvent) : [];
+        setEvents(normalized.filter((event) => isSupportedCategory(event.categoria)));
       } catch (e) {
         console.error("GET eventos error:", e);
         if (!alive) setEvents([]);
@@ -178,10 +173,10 @@ export default function BusquedaCategoria() {
                 <article
                   key={ev.id}
                   className={`catv3-ev-card ${ev.destacado ? "featured" : ""}`}
-                  onClick={() => (window.location.href = `/evento/${ev.id}`)}
+                  onClick={() => nav(`/evento/${ev.id}`)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => (e.key === "Enter" ? (window.location.href = `/evento/${ev.id}`) : null)}
+                  onKeyDown={(e) => (e.key === "Enter" ? nav(`/evento/${ev.id}`) : null)}
                 >
                   <div className="catv3-ev-media">
                     {img ? (

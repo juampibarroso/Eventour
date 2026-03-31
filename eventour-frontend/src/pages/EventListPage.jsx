@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_BASE, getJson } from "../lib/api";
+import { CATEGORY_LABELS, isSupportedCategory } from "../lib/categories";
 import { formatDisplayDate, getTicketUrl, toISODate } from "../lib/eventDisplay";
 import "../styles/EventListPage.css";
 
@@ -46,16 +48,10 @@ const toProxyUrl = (absoluteUrl) => {
   }
 };
 
-const LABEL_CAT = {
-  DEPORTESYAVENTURA: "Deportes y Aventura",
-  GASTRONOMIAYVINO: "Gastronomía y Vino",
-  FERIASYEXPOSICIONES: "Ferias y Exposiciones",
-  MUSICAYESPECTACULOS: "Música y Espectáculos",
-  ARTEYCULTURA: "Arte y Cultura",
-  CHARLASYEVENTOSEMPRESARIALES: "Charlas y Eventos Empresariales",
-};
+const LABEL_CAT = CATEGORY_LABELS;
 
 export default function EventListPage() {
+  const nav = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,6 +61,8 @@ export default function EventListPage() {
   const [to, setTo] = useState("");
   const [order, setOrder] = useState("DATE_ASC"); // o DATE_DESC
 
+  const hasFilters = Boolean(search || category || from || to || order !== "DATE_ASC");
+
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -72,7 +70,8 @@ export default function EventListPage() {
         setLoading(true);
         const data = await getJson(`${API_BASE}/eventos`, { auth: false });
         if (!alive) return;
-        setEvents(Array.isArray(data) ? data.map(normalizeEvent) : []);
+        const normalized = Array.isArray(data) ? data.map(normalizeEvent) : [];
+        setEvents(normalized.filter((event) => isSupportedCategory(event.categoria)));
       } catch (err) {
         console.error("GET /eventos error", err);
         if (alive) setEvents([]);
@@ -123,53 +122,97 @@ export default function EventListPage() {
   return (
     <main className="evp-page">
       <header className="events-head">
+        <span className="events-kicker">Cartelera viva</span>
         <h1>Todos los Eventos</h1>
-        <p>Explorá y encontrá tu próxima salida.</p>
+        <p>Explorá la agenda completa, filtrá por lo que te interesa y encontrá tu próxima salida.</p>
       </header>
 
       <section className="events-toolbar">
-        <input
-          className="evp-input"
-          placeholder="Buscar por título o descripción…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="events-toolbar-head">
+          <div>
+            <p className="events-toolbar-kicker">Filtros inteligentes</p>
+            <h2 className="events-toolbar-title">Afiná tu búsqueda</h2>
+          </div>
+          <div className="events-toolbar-side">
+            <span className="events-counter">
+              {loading ? "Actualizando agenda..." : `${filtered.length} eventos visibles`}
+            </span>
+            {hasFilters && (
+              <button
+                type="button"
+                className="events-clear"
+                onClick={() => {
+                  setSearch("");
+                  setCategory("");
+                  setFrom("");
+                  setTo("");
+                  setOrder("DATE_ASC");
+                }}
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        </div>
 
-        <select
-          className="evp-select"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        >
-          <option value="">Todas las categorías</option>
-          {availableCats.map((c) => (
-            <option key={c} value={c}>
-              {LABEL_CAT[c] || c}
-            </option>
-          ))}
-        </select>
+        <div className="events-toolbar-grid">
+          <input
+            className="evp-input"
+            placeholder="Buscar por título o descripción…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-        <input
-          type="date"
-          className="evp-date"
-          value={from}
-          onChange={(e) => setFrom(e.target.value)}
-        />
-        <input
-          type="date"
-          className="evp-date"
-          value={to}
-          onChange={(e) => setTo(e.target.value)}
-        />
+          <select
+            className="evp-select"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="">Todas las categorías</option>
+            {availableCats.map((c) => (
+              <option key={c} value={c}>
+                {LABEL_CAT[c] || c}
+              </option>
+            ))}
+          </select>
 
-        <select
-          className="evp-select"
-          value={order}
-          onChange={(e) => setOrder(e.target.value)}
-        >
-          <option value="DATE_ASC">Fecha ↑</option>
-          <option value="DATE_DESC">Fecha ↓</option>
-        </select>
+          <input
+            type="date"
+            className="evp-date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+          <input
+            type="date"
+            className="evp-date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+          />
+
+          <select
+            className="evp-select"
+            value={order}
+            onChange={(e) => setOrder(e.target.value)}
+          >
+            <option value="DATE_ASC">Fecha ↑</option>
+            <option value="DATE_DESC">Fecha ↓</option>
+          </select>
+        </div>
       </section>
+
+      {!loading && (
+        <section className="events-results-head">
+          <div>
+            <p className="events-results-kicker">Resultados</p>
+            <h2 className="events-results-title">Eventos para descubrir</h2>
+          </div>
+          <p className="events-results-copy">
+            {filtered.length === 0
+              ? "No encontramos eventos con esa combinación de filtros."
+              : `Mostrando ${filtered.length} propuesta${filtered.length === 1 ? "" : "s"} activas.`}
+          </p>
+        </section>
+      )}
 
       {loading ? (
         <div className="evp-state">Cargando eventos…</div>
@@ -184,7 +227,7 @@ export default function EventListPage() {
               <article
                 key={e.id}
                 className={`ev-card ${e.destacado ? "featured" : ""}`}
-                onClick={() => (window.location.href = `/evento/${e.id}`)}
+                onClick={() => nav(`/evento/${e.id}`)}
               >
                 <div className="ev-thumb-wrap">
                   {img ? (
@@ -206,7 +249,7 @@ export default function EventListPage() {
                   ) : (
                     <div className="ev-thumb--ph">eventour</div>
                   )}
-                  {e.destacado && <span className="badge">★</span>}
+                  {e.destacado && <span className="badge">★ Destacado</span>}
                 </div>
 
                 <div className="ev-body">

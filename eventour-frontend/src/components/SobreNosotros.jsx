@@ -1,39 +1,53 @@
-import React from "react";
 import "../styles/SobreNosotros.css";
+import stageBg from "../assets/33.jpg";
+
+const qaItems = [
+  {
+    question: "¿Qué es Eventour?",
+    answer:
+      "Una plataforma digital que centraliza y organiza eventos de Mendoza y, progresivamente, también de Chile para que descubrir planes sea simple y confiable.",
+  },
+  {
+    question: "¿Cómo puedo buscar eventos?",
+    answer:
+      "Podés explorar por ubicación, categoría, fecha o ir directo a los destacados. La idea es que siempre tengas una forma rápida de encontrar algo que encaje con vos.",
+  },
+  {
+    question: "¿La información es confiable?",
+    answer:
+      "Sí. Trabajamos con eventos provenientes de organizadores, instituciones y fuentes verificadas para ofrecer datos más claros, actuales y útiles.",
+  },
+  {
+    question: "¿Qué valor agrega Eventour?",
+    answer:
+      "No solo listamos eventos: los ordenamos, los hacemos comparables y te damos una experiencia visual que ayuda a decidir más rápido qué hacer.",
+  },
+];
 
 const SobreNosotros = () => {
   return (
     <section className="sobre-nosotros-section" id="sobre-nosotros">
-
-      <h2 className="sobre-titulo">¿Quiénes somos?</h2>
-
-      <div className="qa-container">
-        <div className="qa-item">
-          <h3 className="pregunta">🧭 ¿Qué es Eventour?</h3>
-          <p className="respuesta">
-            Una plataforma digital que centraliza y organiza todos los eventos de Mendoza. Ofreciendo una experiencia completa para descubrir y planificar tu proxima salida.
+      <div
+        className="sobre-stage"
+        style={{ "--sobre-stage-bg": `url(${stageBg})` }}
+      >
+        <div className="sobre-head">
+          <span className="sobre-kicker">Sobre Eventour</span>
+          <h2 className="sobre-titulo">Una guía visual para descubrir mejores salidas</h2>
+          <p className="sobre-sub">
+            Centralizamos experiencias, facilitamos la búsqueda y tratamos cada evento como una
+            propuesta que merece verse bien y entenderse rápido.
           </p>
         </div>
 
-        <div className="qa-item">
-          <h3 className="pregunta">🎉 ¿Como puedo bucar eventos?</h3>
-          <p className="respuesta">
-            Utiliza nuestros filtros inteligentes para encontrar eventos por zona geográfica, categoría, fecha y ubicación. Es fácil y rápido!
-          </p>
-        </div>
-
-        <div className="qa-item">
-          <h3 className="pregunta">👥 ¿La informacion es confiable?</h3>
-          <p className="respuesta">
-            Si, los eventos vienen de fuentes verificadas, instituciones publicas o privadas y organizadores reconocidos, garantizando datos actualizados y oficiales.
-          </p>
-        </div>
-
-        <div className="qa-item">
-          <h3 className="pregunta">💡 ¿Eventour incluye todos los eventos de Mendoza?</h3>
-          <p className="respuesta">
-            Si. Es la unica guia digital que centraliza y organiza todos los eventos publicos de los 18 departamentos de la provincia.
-          </p>
+        <div className="qa-container">
+          {qaItems.map((item, index) => (
+            <div key={item.question} className="qa-item">
+              <span className="qa-index">0{index + 1}</span>
+              <h3 className="pregunta">{item.question}</h3>
+              <p className="respuesta">{item.answer}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

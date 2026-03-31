@@ -1,7 +1,7 @@
-// src/pages/BusquedaFecha.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE, getJson } from "../lib/api";
+import { isSupportedCategory } from "../lib/categories";
 import "../styles/BusquedaFecha.css";
 
 const toISO = (d) => {
@@ -41,6 +41,7 @@ export default function BusquedaFecha() {
   const today = toISO(new Date());
   const [from, setFrom] = useState(today);
   const [to, setTo] = useState(today);
+  const hasFilters = Boolean(from || to);
 
   useEffect(() => {
     let ignore = false;
@@ -51,6 +52,7 @@ export default function BusquedaFecha() {
         const evs = await getJson(`${API_BASE}/eventos`, { auth: false });
         if (ignore) return;
         const normalized = (Array.isArray(evs) ? evs : [])
+          .filter((ev) => isSupportedCategory(ev.categoria ?? ev.categoriaEvento ?? ev.category))
           .map((ev) => {
             const r = normalizeRange(ev);
             return r ? { ...ev, __r: r } : null;
@@ -98,11 +100,22 @@ export default function BusquedaFecha() {
   return (
     <main className="df-page" role="main" aria-labelledby="df-title">
       <header className="df-head">
+        <span className="df-kicker">Agenda por fecha</span>
         <h1 id="df-title" className="df-title">Buscar por Fecha</h1>
-        <p className="df-sub">Elegí un rango para ver eventos dentro de esas fechas.</p>
+        <p className="df-sub">Elegí un rango, activá atajos rápidos y encontrá planes dentro de esas fechas.</p>
       </header>
 
       <section className="df-controls" aria-label="Rango de fechas">
+        <div className="df-controls-head">
+          <div>
+            <p className="df-controls-kicker">Rango temporal</p>
+            <h2 className="df-controls-title">Definí tu ventana de búsqueda</h2>
+          </div>
+          {hasFilters && (
+            <button className="df-clear" onClick={clear}>Limpiar</button>
+          )}
+        </div>
+
         <div className="df-inputs">
           <label className="df-field">
             <span className="df-field-label">Desde</span>
@@ -133,15 +146,31 @@ export default function BusquedaFecha() {
           <button className="df-chip" onClick={setHoy}>Hoy</button>
           <button className="df-chip" onClick={setFinDeSemana}>Fin de semana</button>
           <button className="df-chip" onClick={setMes}>Este mes</button>
-          <button className="df-clear" onClick={clear}>Limpiar</button>
         </div>
 
         {(from || to) && (
           <div className="df-active" aria-live="polite">
             <span className="df-badge">🗓️ {from || "—"} {to ? `→ ${to}` : ""}</span>
+            <span className="df-result-pill">
+              {loading ? "Buscando..." : `${filtered.length} evento${filtered.length === 1 ? "" : "s"}`}
+            </span>
           </div>
         )}
       </section>
+
+      {!loading && !err && (
+        <section className="df-results-head">
+          <div>
+            <p className="df-controls-kicker">Resultados</p>
+            <h2 className="df-controls-title">Eventos dentro del rango</h2>
+          </div>
+          <p className="df-results-copy">
+            {filtered.length
+              ? `Encontramos ${filtered.length} propuesta${filtered.length === 1 ? "" : "s"} para ese período.`
+              : "Ajustá el rango para encontrar una mejor coincidencia."}
+          </p>
+        </section>
+      )}
 
       <section className="df-results" aria-live="polite">
         {loading ? (

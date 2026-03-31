@@ -1,19 +1,9 @@
 // src/pages/CreateEvent.jsx
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE, getJson, postJson } from "../lib/api";
+import { CATEGORY_LABELS, CATEGORY_VALUES } from "../lib/categories";
 import { normalizeTicketUrl } from "../lib/eventDisplay";
 import { OASIS_LABELS, getAvailableOases, filterLocationsByOasis } from "../lib/locations";
-
-const CATEGORIAS = [
-  "SHOW",
-  "GASTRONOMIAYVINO",
-  "MUSICA",
-  "TEATRO",
-  "DEPORTE",
-  "FESTIVAL",
-  "FERIA",
-  "OTROS",
-];
 
 const ESTADOS = ["ACTIVO", "CANCELADO", "FINALIZADO", "PAUSADO"];
 
@@ -245,8 +235,8 @@ export default function CreateEvent() {
           required
         >
           <option value="">— Categoría —</option>
-          {CATEGORIAS.map((c) => (
-            <option key={c} value={c}>{c}</option>
+          {CATEGORY_VALUES.map((c) => (
+            <option key={c} value={c}>{CATEGORY_LABELS[c] || c}</option>
           ))}
         </select>
 

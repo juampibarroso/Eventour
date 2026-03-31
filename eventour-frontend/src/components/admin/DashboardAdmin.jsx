@@ -125,7 +125,6 @@ export default function DashboardAdmin({ onLogout }) {
         <div className="admin-section-head">
           <div>
             <h2>Ubicaciones</h2>
-            <p className="admin-section-copy">Gestioná el mapa de lugares sin ocupar todo el panel.</p>
           </div>
         </div>
         <UbicacionForm />
@@ -144,7 +143,6 @@ export default function DashboardAdmin({ onLogout }) {
         <div className="admin-section-head">
           <div>
             <h2>Banners publicitarios</h2>
-            <p className="admin-section-copy">Cargá y cambiá los auspiciantes desde el panel sin tocar el código.</p>
           </div>
         </div>
         <BannerAdmin />
@@ -154,7 +152,6 @@ export default function DashboardAdmin({ onLogout }) {
         <div className="admin-section-head">
           <div>
             <h2>Eventos cargados</h2>
-            <p className="admin-section-copy">Buscá rápido por nombre y revisá lo publicado en un solo vistazo.</p>
           </div>
           <button className="btn-secondary" onClick={fetchEventos} disabled={loading}>
             {loading ? "Actualizando…" : "Refrescar"}
