@@ -1,19 +1,9 @@
 // src/pages/EventDetailPage.jsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_BASE, getJson } from "../lib/api";
+import { formatDisplayDate, getTicketUrl } from "../lib/eventDisplay";
 import "../styles/EventDetail.css";
-
-/* ------- helpers ------- */
-const toISO = (d) => {
-  if (!d) return null;
-  const dt = new Date(d);
-  if (Number.isNaN(+dt)) return null;
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  const da = String(dt.getDate()).padStart(2, "0");
-  return `${y}-${m}-${da}`;
-};
 
 const backendBaseFromApi = (apiBase) => apiBase.replace(/\/api\/?$/i, "");
 
@@ -89,8 +79,8 @@ export default function EventDetailPage() {
     );
   }
 
-  const desde = toISO(ev.fechaInicio);
-  const hasta = toISO(ev.fechaFin || ev.fechaInicio);
+  const fechaInicio = formatDisplayDate(ev.fechaInicio);
+  const ticketUrl = getTicketUrl(ev);
   const primary = pickImage(ev, backendBase);
 
   return (
@@ -122,22 +112,24 @@ export default function EventDetailPage() {
       <div className="evd-wrap">
         <h1 className="evd-title">{ev.titulo || "Evento"}</h1>
         {ev.descripcion && <p className="evd-desc">{ev.descripcion}</p>}
+        {ticketUrl && (
+          <div className="evd-ticket-block">
+            <a
+              className="evd-ticket-action"
+              href={ticketUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Comprar entradas
+            </a>
+          </div>
+        )}
 
         <div className="evd-info">
-          {desde && (
+          {fechaInicio && (
             <div className="evd-row">
               <div className="evd-key">Fecha</div>
-              <div className="evd-val">
-                {desde}{hasta && ` — ${hasta}`}
-              </div>
-            </div>
-          )}
-          {Number.isFinite(Number(ev.precio)) && (
-            <div className="evd-row">
-              <div className="evd-key">Precio</div>
-              <div className="evd-val">
-                {new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(ev.precio)}
-              </div>
+              <div className="evd-val">{fechaInicio}</div>
             </div>
           )}
           {(ev.ubicacion?.nombre || ev.ubicacionTexto) && (

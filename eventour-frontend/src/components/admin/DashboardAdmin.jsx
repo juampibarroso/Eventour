@@ -1,6 +1,7 @@
 // src/components/admin/DashboardAdmin.jsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { API_BASE, getJson, del } from "../../lib/api";
+import { formatDisplayDate, getTicketUrl } from "../../lib/eventDisplay";
 import UbicacionForm from "./UbicacionForm";
 import EventForm from "./EventForm";
 import "../../styles/Admin.css";
@@ -121,6 +122,7 @@ export default function DashboardAdmin({ onLogout }) {
           {eventos.map((ev) => {
             const primary = imgSrc(ev);
             const isExternal = /^https?:\/\//i.test(primary) && !sameHost(primary);
+            const ticketUrl = getTicketUrl(ev);
             return (
               <article className="event-card" key={ev.id}>
                 <div className="event-card-media">
@@ -149,14 +151,22 @@ export default function DashboardAdmin({ onLogout }) {
                   <h3 className="event-title">{ev.titulo}</h3>
                   {ev.descripcion && <p className="event-desc">{ev.descripcion}</p>}
 
+                  {ticketUrl && (
+                    <div className="event-card-links">
+                      <a
+                        className="admin-ticket-link"
+                        href={ticketUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Ver entradas
+                      </a>
+                    </div>
+                  )}
+
                   <div className="event-meta">
                     {ev.fechaInicio && (
-                      <span className="chip">
-                        {ev.fechaInicio}{ev.fechaFin ? ` → ${ev.fechaFin}` : ""}
-                      </span>
-                    )}
-                    {typeof ev.precio === "number" && ev.precio > 0 && (
-                      <span className="chip">${ev.precio}</span>
+                      <span className="chip">{formatDisplayDate(ev.fechaInicio)}</span>
                     )}
                     {ev.categoria && <span className="chip ghost">{ev.categoria}</span>}
                   </div>

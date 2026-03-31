@@ -1,6 +1,8 @@
 // src/components/admin/EventForm.jsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { API_BASE, getJson } from "../../lib/api";
+import { normalizeTicketUrl } from "../../lib/eventDisplay";
+import { OASIS_LABELS, getAvailableOases, filterLocationsByOasis } from "../../lib/locations";
 
 const CATEGORIAS = [
   "DEPORTESYAVENTURA",
@@ -11,12 +13,14 @@ const CATEGORIAS = [
   "CHARLASYEVENTOSEMPRESARIALES",
 ];
 
+const DESCRIPTION_LIMIT = 60000;
+
 const initial = {
   titulo: "",
   descripcion: "",
   fechaInicio: "",
   fechaFin: "",
-  precio: "",
+  linkEntradas: "",
   imagenUrl: "",
   categoria: "",
   destacado: false,
@@ -29,6 +33,7 @@ export default function EventForm({ onSaved }) {
   const [msg, setMsg] = useState("");
   const [ubicaciones, setUbicaciones] = useState([]);
   const [loadingUbic, setLoadingUbic] = useState(false);
+  const [ubicacionOasis, setUbicacionOasis] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -45,22 +50,52 @@ export default function EventForm({ onSaved }) {
     })();
   }, []);
 
+  const oasisDisponibles = useMemo(
+    () => getAvailableOases(ubicaciones),
+    [ubicaciones]
+  );
+
+  const ubicacionesFiltradas = useMemo(
+    () => filterLocationsByOasis(ubicaciones, ubicacionOasis),
+    [ubicaciones, ubicacionOasis]
+  );
+
+  useEffect(() => {
+    setForm((current) => {
+      if (!current.ubicacionId) return current;
+      const exists = ubicacionesFiltradas.some((u) => String(u.id) === String(current.ubicacionId));
+      return exists ? current : { ...current, ubicacionId: "" };
+    });
+  }, [ubicacionesFiltradas]);
+
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm((s) => ({ ...s, [name]: type === "checkbox" ? checked : value }));
   };
 
+  const onTicketBlur = () => {
+    setForm((s) => {
+      const normalized = normalizeTicketUrl(s.linkEntradas);
+      return normalized ? { ...s, linkEntradas: normalized } : s;
+    });
+  };
+
+  const descriptionLength = form.descripcion.length;
+  const remainingDescription = DESCRIPTION_LIMIT - descriptionLength;
+
   // ====== payload con ALIASES de imagen y categoría (compat) ======
   const buildPayload = () => {
     const img = (form.imagenUrl || "").trim();
     const cat = form.categoria ? String(form.categoria).toUpperCase() : "";
+    const ticketUrl = normalizeTicketUrl(form.linkEntradas) || "";
 
     const common = {
       titulo: form.titulo?.trim(),
       descripcion: form.descripcion?.trim() || "",
       fechaInicio: form.fechaInicio || null,
       fechaFin: form.fechaFin || form.fechaInicio || null,
-      precio: form.precio ? Number(form.precio) : 0,
+      precio: 0,
+      linkEntradas: ticketUrl,
       destacado: !!form.destacado,
       // ubicación (los dos nombres más típicos)
       ubicacionId: form.ubicacionId ? Number(form.ubicacionId) : undefined,
@@ -189,11 +224,17 @@ export default function EventForm({ onSaved }) {
 
         <textarea
           name="descripcion"
-          placeholder="Descripción"
+          placeholder="Descripción completa del evento"
           value={form.descripcion}
           onChange={onChange}
-          rows={4}
+          maxLength={DESCRIPTION_LIMIT}
+          rows={8}
+          style={{ minHeight: 160, resize: "vertical" }}
         />
+        <div className="admin-field-hint">
+          <span>{descriptionLength} / {DESCRIPTION_LIMIT} caracteres</span>
+          <span>{remainingDescription} disponibles</span>
+        </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <label>
@@ -217,14 +258,18 @@ export default function EventForm({ onSaved }) {
           </label>
         </div>
 
-        <input
-          type="number"
-          name="precio"
-          placeholder="Precio (opcional)"
-          value={form.precio}
-          onChange={onChange}
-          min="0"
-        />
+        <label>
+          <span>Link de entradas (opcional)</span>
+          <input
+            type="text"
+            name="linkEntradas"
+            placeholder="https://..."
+            value={form.linkEntradas}
+            onChange={onChange}
+            onBlur={onTicketBlur}
+            inputMode="url"
+          />
+        </label>
 
         <label className="img-field">
           <span className="img-label">Imagen (URL completa)</span>
@@ -268,6 +313,20 @@ export default function EventForm({ onSaved }) {
         </label>
 
         <label>
+          <span>Zona / oasis</span>
+          <select
+            name="ubicacionOasis"
+            value={ubicacionOasis}
+            onChange={(e) => setUbicacionOasis(e.target.value)}
+          >
+            <option value="">Todas las zonas</option>
+            {oasisDisponibles.map((value) => (
+              <option key={value} value={value}>{OASIS_LABELS[value] || value}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
           <span>Ubicación</span>
           <select
             name="ubicacionId"
@@ -275,15 +334,25 @@ export default function EventForm({ onSaved }) {
             onChange={onChange}
             required
           >
-            <option value="">— Seleccioná una ubicación —</option>
-            {ubicaciones.map((u) => (
+            <option value="">
+              {ubicacionesFiltradas.length
+                ? "— Seleccioná una ubicación —"
+                : "— No hay ubicaciones para esa zona —"}
+            </option>
+            {ubicacionesFiltradas.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.nombre} {u.direccion ? `— ${u.direccion}` : ""}
+                {u.nombre} {u.direccion ? `— ${u.direccion}` : ""} {u.oasis ? `• ${OASIS_LABELS[u.oasis] || u.oasis}` : ""}
               </option>
             ))}
           </select>
         </label>
         {loadingUbic && <small>Cargando ubicaciones…</small>}
+        {!loadingUbic && (
+          <small>
+            {ubicacionesFiltradas.length} ubicaciones disponibles
+            {ubicacionOasis ? ` en ${OASIS_LABELS[ubicacionOasis] || ubicacionOasis}` : ""}
+          </small>
+        )}
 
         <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <input

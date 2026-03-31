@@ -13,6 +13,7 @@ public record EventoDTO(
         LocalDate fechaInicio,
         LocalDate fechaFin,
         BigDecimal precio,
+        String linkEntradas,
         String imagen,
         Evento.EstadoEvento estado,
         Long ubicacionId,

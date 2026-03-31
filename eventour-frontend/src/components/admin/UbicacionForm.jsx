@@ -1,16 +1,9 @@
 // src/components/admin/UbicacionForm.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "../../styles/UbicacionForm.css";
 import { Loader } from "@googlemaps/js-api-loader";
 import { API_BASE, postJsonWithFallback, getJson, del as httpDelete } from "../../lib/api";
-
-const OASIS = [
-  "GRAN_MENDOZA",
-  "OASIS_NORTE",
-  "OASIS_SUR",
-  "VALLE_DE_UCO",
-  // "OASIS_ESTE", // dejalo comentado si tu backend NO lo admite
-];
+import { OASIS_LABELS, OASIS_ORDER, sortLocations } from "../../lib/locations";
 
 export default function UbicacionForm() {
   const [nombre, setNombre] = useState("");
@@ -28,6 +21,22 @@ export default function UbicacionForm() {
   const inputRef = useRef(null);
   const markerRef = useRef(null);
   const mapInstance = useRef(null);
+  const listaOrdenada = useMemo(() => sortLocations(lista), [lista]);
+
+  const buildFriendlyError = (rawMessage) => {
+    if (!rawMessage) {
+      return "No se pudo crear la ubicación.";
+    }
+
+    if (
+      rawMessage.includes('Cannot deserialize value of type') &&
+      rawMessage.includes('"CHILE"')
+    ) {
+      return "El backend que hoy está publicado todavía no acepta la zona CHILE. El frontend ya está listo, pero falta desplegar el backend actualizado para poder guardar ubicaciones de Chile.";
+    }
+
+    return "No se pudo crear la ubicación. Detalle: " + rawMessage;
+  };
 
   // === Cargar listado de ubicaciones (para ver/eliminar duplicadas)
   const loadUbicaciones = async () => {
@@ -117,7 +126,7 @@ export default function UbicacionForm() {
       loadUbicaciones();
     } catch (e) {
       console.error("Ubicación POST error:", e);
-      setError("No se pudo crear la ubicación. Detalle: " + e.message);
+      setError(buildFriendlyError(e.message));
     } finally {
       setCargando(false);
     }
@@ -152,8 +161,8 @@ export default function UbicacionForm() {
           onChange={(e) => setOasis(e.target.value)}
         >
           <option value="">Oasis (opcional)</option>
-          {OASIS.map((o) => (
-            <option key={o} value={o}>{o}</option>
+          {OASIS_ORDER.map((o) => (
+            <option key={o} value={o}>{OASIS_LABELS[o] || o}</option>
           ))}
         </select>
 
@@ -188,7 +197,7 @@ export default function UbicacionForm() {
           <button className="ubif-mini" onClick={loadUbicaciones}>Refrescar</button>
         </div>
 
-        {lista.map((u) => (
+        {listaOrdenada.map((u) => (
           <div key={u.id} className="ubif-item">
             <div className="ubif-item-txt">
               <strong>{u.nombre}</strong>
@@ -197,7 +206,7 @@ export default function UbicacionForm() {
                 {(u.latitud != null && u.longitud != null)
                   ? `(${u.latitud}, ${u.longitud})`
                   : "Sin coordenadas"}
-                {u.oasis ? ` • ${u.oasis}` : ""}
+                {u.oasis ? ` • ${OASIS_LABELS[u.oasis] || u.oasis}` : ""}
               </small>
             </div>
             <button className="ubif-del" onClick={() => handleEliminar(u.id)}>

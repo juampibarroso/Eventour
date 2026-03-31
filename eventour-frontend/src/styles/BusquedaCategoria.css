@@ -129,11 +129,33 @@
   min-height:2.7rem;
 }
 .catv3-ev-meta{ display:flex; gap:8px; flex-wrap:wrap; margin-top:auto; }
+.catv3-ev-actions{ margin-top:12px; }
 .catv3-chip{
   display:inline-block; padding:6px 10px; border-radius:999px;
   border:1px solid rgba(219,73,251,.25); color:#eae2ff; font-size:.85rem; background: rgba(219,73,251,.08);
 }
 .catv3-chip.ghost{ opacity:.9; }
+
+.catv3-ticket-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  padding:0 14px;
+  border-radius:999px;
+  border:1px solid rgba(219,73,251,.32);
+  background:rgba(219,73,251,.12);
+  color:#f4e6ff;
+  font-weight:800;
+  text-decoration:none;
+  transition:transform .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.catv3-ticket-link:hover{
+  transform:translateY(-1px);
+  border-color:rgba(219,73,251,.55);
+  background:rgba(219,73,251,.18);
+}
 
 /* Responsive */
 @media (max-width: 520px){

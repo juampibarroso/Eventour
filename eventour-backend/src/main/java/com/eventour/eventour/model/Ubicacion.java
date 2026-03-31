@@ -38,10 +38,9 @@ public class Ubicacion {
     public Ubicacion() {
     }
 
-    public Ubicacion( String nombre, String direccion, Oasis oasis, Double latitud, Double longitud) {
+    public Ubicacion(String nombre, String direccion, Oasis oasis, Double latitud, Double longitud) {
         this.nombre = nombre;
         this.direccion = direccion;
-        
         this.oasis= oasis;
         this.latitud = latitud;
         this.longitud = longitud;

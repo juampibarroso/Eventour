@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE, getJson } from "../lib/api";
+import { formatDisplayDate, getTicketUrl, toISODate } from "../lib/eventDisplay";
 import "../styles/BusquedaUbicacion.css";
 
 /* Reutilizamos los estilos de tarjetas de la vista /events */
@@ -31,11 +32,11 @@ const normEvent = (r) => ({
     (r.categoria ?? r.categoriaEvento ?? r.categoriaId ?? "")
       ? String(r.categoria ?? r.categoriaEvento ?? r.categoriaId).toUpperCase()
       : "",
-  precio: Number(r.precio ?? 0) || 0,
   destacado: !!(typeof r.destacado === "number" ? r.destacado > 0 : r.destacado),
   ubicacionId: Number(r.ubicacion_id ?? r.ubicacionId ?? r.ubicacion?.id) || null,
   fechaInicio: r.fecha_inicio ?? r.fechaInicio ?? null,
   fechaFin: r.fecha_fin ?? r.fechaFin ?? null,
+  linkEntradas: getTicketUrl(r),
 
   // aliases de imagen
   imagen: r.imagen ?? r.imagenUrl ?? r.urlImagen ?? r.imagenPrincipal ?? "",
@@ -73,17 +74,6 @@ const imgSrc = (ev) => {
   ].filter(Boolean);
   const found = cand.find((x) => typeof x === "string" && x.trim() !== "");
   return normalizeUrl(found) || "/assets/bannernegro-cXfYfe60.jpg";
-};
-
-/* ===== Fechas/Precio ===== */
-const toISO = (d) => {
-  if (!d) return "";
-  const dt = new Date(d);
-  if (Number.isNaN(+dt)) return "";
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  const da = String(dt.getDate()).padStart(2, "0");
-  return `${y}-${m}-${da}`;
 };
 
 export default function BusquedaUbicacion() {
@@ -264,16 +254,7 @@ export default function BusquedaUbicacion() {
           <section className="evp-grid">
             {filtered.map(({ ev, ubi }) => {
               const primary = imgSrc(ev);
-              const desde = toISO(ev.fechaInicio);
-              const hasta = toISO(ev.fechaFin || ev.fechaInicio);
-              const price =
-                Number.isFinite(Number(ev.precio)) && Number(ev.precio) > 0
-                  ? new Intl.NumberFormat("es-AR", {
-                      style: "currency",
-                      currency: "ARS",
-                      maximumFractionDigits: 0,
-                    }).format(Number(ev.precio))
-                  : null;
+              const desde = toISODate(ev.fechaInicio);
 
               return (
                 <article
@@ -315,15 +296,24 @@ export default function BusquedaUbicacion() {
                     </p>
 
                     <div className="ev-chips">
-                      {desde && (
-                        <span className="chip">
-                          {desde}
-                          {hasta && hasta !== desde ? ` → ${hasta}` : ""}
-                        </span>
-                      )}
-                      {price && <span className="chip">{price}</span>}
+                      {desde && <span className="chip">{formatDisplayDate(desde)}</span>}
                       {ev.categoria && <span className="chip ghost">{ev.categoria}</span>}
                     </div>
+
+                    {ev.linkEntradas && (
+                      <div className="ev-card-actions">
+                        <a
+                          className="ev-ticket-link"
+                          href={ev.linkEntradas}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
+                          Comprar entradas
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </article>
               );

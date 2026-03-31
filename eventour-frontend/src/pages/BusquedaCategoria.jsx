@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { API_BASE, getJson } from "../lib/api";
+import { formatDisplayDate, getTicketUrl, toISODate } from "../lib/eventDisplay";
 import "../styles/BusquedaCategoria.css";
 
 /** Catálogo = exactamente los valores que guarda el backend */
@@ -15,16 +16,6 @@ const CATS = [
 
 const LABEL_CAT = Object.fromEntries(CATS.map(c => [c.value, c.label]));
 
-const toISO = (d) => {
-  if (!d) return "";
-  const dt = new Date(d);
-  if (Number.isNaN(+dt)) return "";
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  const da = String(dt.getDate()).padStart(2, "0");
-  return `${y}-${m}-${da}`;
-};
-
 const normalizeEvent = (raw) => {
   const titulo = raw.titulo ?? raw.title ?? raw.nombre ?? "";
   const descripcion = raw.descripcion ?? raw.description ?? "";
@@ -36,7 +27,6 @@ const normalizeEvent = (raw) => {
     ? String(raw.categoria ?? raw.categoriaEvento ?? raw.category).toUpperCase()
     : "";
 
-  const precio = Number(raw.precio ?? 0) || 0;
   const destacado = typeof raw.destacado === "number" ? raw.destacado > 0 : !!raw.destacado;
 
   const imagen =
@@ -51,12 +41,12 @@ const normalizeEvent = (raw) => {
     id: raw.id,
     titulo,
     descripcion,
-    fechaInicio: toISO(fi),
-    fechaFin: toISO(ff || fi),
+    fechaInicio: toISODate(fi),
+    fechaFin: toISODate(ff || fi),
     categoria,
-    precio,
     destacado,
     imagen,
+    linkEntradas: getTicketUrl(raw),
   };
 };
 
@@ -182,15 +172,6 @@ export default function BusquedaCategoria() {
         ) : (
           <div className="catv3-grid-events">
             {filtered.map((ev) => {
-              const price =
-                Number.isFinite(ev.precio) && ev.precio > 0
-                  ? new Intl.NumberFormat("es-AR", {
-                      style: "currency",
-                      currency: "ARS",
-                      maximumFractionDigits: 0,
-                    }).format(ev.precio)
-                  : null;
-
               const img = ev.imagen;
 
               return (
@@ -233,16 +214,26 @@ export default function BusquedaCategoria() {
 
                     <div className="catv3-ev-meta">
                       {ev.fechaInicio && (
-                        <span className="catv3-chip">
-                          {ev.fechaInicio}
-                          {ev.fechaFin && ev.fechaFin !== ev.fechaInicio ? ` → ${ev.fechaFin}` : ""}
-                        </span>
+                        <span className="catv3-chip">{formatDisplayDate(ev.fechaInicio)}</span>
                       )}
-                      {price && <span className="catv3-chip">{price}</span>}
                       {ev.categoria && (
                         <span className="catv3-chip ghost">{LABEL_CAT[ev.categoria] || ev.categoria}</span>
                       )}
                     </div>
+
+                    {ev.linkEntradas && (
+                      <div className="catv3-ev-actions">
+                        <a
+                          className="catv3-ticket-link"
+                          href={ev.linkEntradas}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Comprar entradas
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </article>
               );

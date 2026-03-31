@@ -40,4 +40,7 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
 
     List<Evento> findByFechaInicioBetween(LocalDate fechaInicio, LocalDate fechaFin);
 
+    @Query("SELECT e FROM Evento e WHERE COALESCE(e.fechaFin, e.fechaInicio) < :cutoff")
+    List<Evento> findObsoletosAntesDe(@Param("cutoff") LocalDate cutoff);
+
 }

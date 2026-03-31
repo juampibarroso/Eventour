@@ -176,6 +176,10 @@
   margin-top: auto;
 }
 
+.ev-card-actions {
+  margin-top: 12px;
+}
+
 .chip {
   background: rgba(219, 73, 251, 0.08);
   border: 1px solid rgba(219, 73, 251, 0.25);
@@ -187,6 +191,27 @@
 
 .chip.ghost {
   opacity: 0.85;
+}
+
+.ev-ticket-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(219, 73, 251, 0.32);
+  background: rgba(219, 73, 251, 0.12);
+  color: #f4e6ff;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.ev-ticket-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(219, 73, 251, 0.55);
+  background: rgba(219, 73, 251, 0.18);
 }
 
 /* --- Responsive --- */

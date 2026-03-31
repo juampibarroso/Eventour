@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../../lib/api";
 import "../../styles/Admin.css";
 
 const LoginAdmin = ({ onLogin }) => {
@@ -23,10 +24,8 @@ const LoginAdmin = ({ onLogin }) => {
     setError("");
 
     try {
-      const API = import.meta.env.VITE_API_URL;
-
       const { data } = await axios.post(
-        `${API}/auth/login`,
+        `${API_BASE}/auth/login`,
         {
           username: email,        // ⬅️ el backend espera username
           password: password,

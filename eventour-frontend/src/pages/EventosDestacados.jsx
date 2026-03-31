@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import EventCard from "../components/EventCard";
+import { API_BASE } from "../lib/api";
 import "../styles/EventosDestacados.css";
 import "../styles/EventListPage.css"; // Reutilizamos grid y estilos
 
 const EventosDestacados = () => {
   const [eventosDestacados, setEventosDestacados] = useState([]);
-  const API = import.meta.env.VITE_API_URL; // ✅ CORREGIDO
 
   useEffect(() => {
-    fetch(`${API}/eventos`) // ✅ CORREGIDO: quitado /api redundante
+    fetch(`${API_BASE}/eventos`)
       .then((res) => res.json())
       .then((data) => {
         const filtrados = data.filter((evento) => evento.destacado === true);

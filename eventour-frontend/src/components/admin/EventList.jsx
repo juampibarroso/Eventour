@@ -1,12 +1,5 @@
 // src/components/admin/EventList.jsx
-import React from "react";
-
-const toISO = (d) => {
-  if (!d) return "";
-  const dt = new Date(d);
-  if (Number.isNaN(+dt)) return "";
-  return dt.toISOString().slice(0, 10);
-};
+import { formatDisplayDate, getTicketUrl } from "../../lib/eventDisplay";
 
 export default function EventList({ eventos, onEdit, onDelete }) {
   if (!Array.isArray(eventos) || eventos.length === 0) {
@@ -21,10 +14,20 @@ export default function EventList({ eventos, onEdit, onDelete }) {
             <h3>{ev.titulo}</h3>
             {ev.descripcion && <p>{ev.descripcion}</p>}
             <p className="evento-fecha">
-              {toISO(ev.fechaInicio || ev.fecha)}
-              {ev.fechaFin ? ` → ${toISO(ev.fechaFin)}` : ""}
+              {formatDisplayDate(ev.fechaInicio || ev.fecha)}
             </p>
-            {Number(ev.precio) > 0 && <p>${Number(ev.precio).toLocaleString("es-AR")}</p>}
+            {getTicketUrl(ev) && (
+              <p>
+                <a
+                  className="admin-ticket-link"
+                  href={getTicketUrl(ev)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Ver entradas
+                </a>
+              </p>
+            )}
             {ev.categoria && <span className="evento-categoria">{ev.categoria}</span>}
           </div>
           <div className="evento-actions">

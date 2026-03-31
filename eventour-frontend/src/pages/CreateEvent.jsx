@@ -1,6 +1,8 @@
 // src/pages/CreateEvent.jsx
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE, getJson, postJson } from "../lib/api";
+import { normalizeTicketUrl } from "../lib/eventDisplay";
+import { OASIS_LABELS, getAvailableOases, filterLocationsByOasis } from "../lib/locations";
 
 const CATEGORIAS = [
   "SHOW",
@@ -20,7 +22,7 @@ const initial = {
   descripcion: "",
   fechaInicio: "",
   fechaFin: "",
-  precio: "",
+  linkEntradas: "",
   imagen: "",            // <— tu backend espera "imagen" (string URL)
   categoriaEvento: "",   // <— enum EXACTO en mayúsculas
   ubicacionId: "",       // <— seleccionable desde /ubicaciones
@@ -34,6 +36,7 @@ export default function CreateEvent() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [preview, setPreview] = useState("");
+  const [ubicacionOasis, setUbicacionOasis] = useState("");
 
   // Cargar ubicaciones (público)
   useEffect(() => {
@@ -62,9 +65,34 @@ export default function CreateEvent() {
     );
   }, [form]);
 
+  const oasisDisponibles = useMemo(
+    () => getAvailableOases(ubicaciones),
+    [ubicaciones]
+  );
+
+  const ubicacionesFiltradas = useMemo(
+    () => filterLocationsByOasis(ubicaciones, ubicacionOasis),
+    [ubicaciones, ubicacionOasis]
+  );
+
+  useEffect(() => {
+    setForm((current) => {
+      if (!current.ubicacionId) return current;
+      const exists = ubicacionesFiltradas.some((u) => String(u.id) === String(current.ubicacionId));
+      return exists ? current : { ...current, ubicacionId: "" };
+    });
+  }, [ubicacionesFiltradas]);
+
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm((s) => ({ ...s, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  const onTicketBlur = () => {
+    setForm((s) => {
+      const normalized = normalizeTicketUrl(s.linkEntradas);
+      return normalized ? { ...s, linkEntradas: normalized } : s;
+    });
   };
 
   const onSubmit = async (e) => {
@@ -79,7 +107,8 @@ export default function CreateEvent() {
         descripcion: form.descripcion?.trim() || "",
         fechaInicio: form.fechaInicio,
         fechaFin: form.fechaFin || null,
-        precio: form.precio ? Number(form.precio) : 0,
+        precio: 0,
+        linkEntradas: normalizeTicketUrl(form.linkEntradas) || "",
         imagen: form.imagen?.trim() || "",
         estado: form.estado || "ACTIVO",
         ubicacionId: Number(form.ubicacionId),
@@ -113,10 +142,11 @@ export default function CreateEvent() {
 
       <textarea
         name="descripcion"
-        placeholder="Descripción"
+        placeholder="Descripción completa del evento"
         value={form.descripcion}
         onChange={onChange}
-        rows={4}
+        rows={8}
+        style={{ minHeight: 160, resize: "vertical" }}
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -143,12 +173,13 @@ export default function CreateEvent() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <input
-          type="number"
-          name="precio"
-          placeholder="Precio (opcional)"
-          value={form.precio}
+          type="text"
+          name="linkEntradas"
+          placeholder="Link de entradas (opcional)"
+          value={form.linkEntradas}
           onChange={onChange}
-          min="0"
+          onBlur={onTicketBlur}
+          inputMode="url"
         />
 
         <select
@@ -195,6 +226,17 @@ export default function CreateEvent() {
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+        <select
+          name="ubicacionOasis"
+          value={ubicacionOasis}
+          onChange={(e) => setUbicacionOasis(e.target.value)}
+        >
+          <option value="">Todas las zonas</option>
+          {oasisDisponibles.map((value) => (
+            <option key={value} value={value}>{OASIS_LABELS[value] || value}</option>
+          ))}
+        </select>
+
         {/* Categoría enum exacto */}
         <select
           name="categoriaEvento"
@@ -215,14 +257,23 @@ export default function CreateEvent() {
           onChange={onChange}
           required
         >
-          <option value="">— Ubicación —</option>
-          {ubicaciones.map((u) => (
+          <option value="">
+            {ubicacionesFiltradas.length
+              ? "— Ubicación —"
+              : "— No hay ubicaciones para esa zona —"}
+          </option>
+          {ubicacionesFiltradas.map((u) => (
             <option key={u.id} value={u.id}>
-              {u.nombre} — {u.direccion}
+              {u.nombre} — {u.direccion} {u.oasis ? `• ${OASIS_LABELS[u.oasis] || u.oasis}` : ""}
             </option>
           ))}
         </select>
       </div>
+
+      <small style={{ color: "#bfc3cd" }}>
+        {ubicacionesFiltradas.length} ubicaciones disponibles
+        {ubicacionOasis ? ` en ${OASIS_LABELS[ubicacionOasis] || ubicacionOasis}` : ""}
+      </small>
 
       <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
         <input

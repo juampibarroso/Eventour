@@ -2,9 +2,8 @@ package com.eventour.eventour.model;
 
 import jakarta.persistence.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name= "eventos")
@@ -15,6 +14,8 @@ public class Evento {
     private Long id;
 
     private String titulo;
+    @Lob
+    @Column(columnDefinition = "TEXT")
     private String descripcion;
 
     @Column(name = "fecha_inicio")
@@ -24,6 +25,10 @@ public class Evento {
     private LocalDate fechaFin;
 
     private BigDecimal precio;
+
+    @Column(name = "link_entradas", length = 500)
+    private String linkEntradas;
+
     private String imagen;
 
     @Enumerated(EnumType.STRING)
@@ -43,13 +48,25 @@ public class Evento {
     public Evento() {
     }
 
-    public Evento( String titulo, String descripcion, LocalDate fechaInicio, LocalDate fechaFin, BigDecimal precio, String imagen, EstadoEvento estado, Ubicacion ubicacion, CategoriaEvento categoria) {
+    public Evento(
+            String titulo,
+            String descripcion,
+            LocalDate fechaInicio,
+            LocalDate fechaFin,
+            BigDecimal precio,
+            String linkEntradas,
+            String imagen,
+            EstadoEvento estado,
+            Ubicacion ubicacion,
+            CategoriaEvento categoria
+    ) {
 
         this.titulo = titulo;
         this.descripcion = descripcion;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
         this.precio = precio;
+        this.linkEntradas = linkEntradas;
         this.imagen = imagen;
         this.estado = estado;
         this.ubicacion = ubicacion;
@@ -117,6 +134,14 @@ public class Evento {
 
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
+    }
+
+    public String getLinkEntradas() {
+        return linkEntradas;
+    }
+
+    public void setLinkEntradas(String linkEntradas) {
+        this.linkEntradas = linkEntradas;
     }
 
     public String getImagen() {

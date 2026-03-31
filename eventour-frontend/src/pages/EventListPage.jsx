@@ -1,17 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { API_BASE, getJson } from "../lib/api";
+import { formatDisplayDate, getTicketUrl, toISODate } from "../lib/eventDisplay";
 import "../styles/EventListPage.css";
-
-/* ===== Helpers ===== */
-const toISO = (d) => {
-  if (!d) return "";
-  const dt = new Date(d);
-  if (Number.isNaN(+dt)) return "";
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  const da = String(dt.getDate()).padStart(2, "0");
-  return `${y}-${m}-${da}`;
-};
 
 const normalizeEvent = (raw) => {
   const titulo = raw.titulo ?? raw.title ?? raw.nombre ?? "";
@@ -24,7 +14,6 @@ const normalizeEvent = (raw) => {
     ? String(raw.categoria ?? raw.categoriaEvento ?? raw.category).toUpperCase()
     : "";
 
-  const precio = Number(raw.precio ?? 0) || 0;
   const destacado = typeof raw.destacado === "number" ? raw.destacado > 0 : !!raw.destacado;
 
   const imagen =
@@ -39,12 +28,12 @@ const normalizeEvent = (raw) => {
     id: raw.id,
     titulo,
     descripcion,
-    fechaInicio: toISO(fi),
-    fechaFin: toISO(ff || fi),
+    fechaInicio: toISODate(fi),
+    fechaFin: toISODate(ff || fi),
     categoria,
-    precio,
     destacado,
     imagen,
+    linkEntradas: getTicketUrl(raw),
   };
 };
 
@@ -189,15 +178,6 @@ export default function EventListPage() {
       ) : (
         <section className="evp-grid">
           {filtered.map((e) => {
-            const price =
-              e.precio > 0
-                ? new Intl.NumberFormat("es-AR", {
-                    style: "currency",
-                    currency: "ARS",
-                    maximumFractionDigits: 0,
-                  }).format(e.precio)
-                : null;
-
             const img = e.imagen;
 
             return (
@@ -235,20 +215,28 @@ export default function EventListPage() {
 
                   <div className="ev-chips">
                     {e.fechaInicio && (
-                      <span className="chip">
-                        {e.fechaInicio}
-                        {e.fechaFin && e.fechaFin !== e.fechaInicio
-                          ? ` → ${e.fechaFin}`
-                          : ""}
-                      </span>
+                      <span className="chip">{formatDisplayDate(e.fechaInicio)}</span>
                     )}
-                    {price && <span className="chip">{price}</span>}
                     {e.categoria && (
                       <span className="chip ghost">
                         {LABEL_CAT[e.categoria] || e.categoria}
                       </span>
                     )}
                   </div>
+
+                  {e.linkEntradas && (
+                    <div className="ev-card-actions">
+                      <a
+                        className="ev-ticket-link"
+                        href={e.linkEntradas}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(ev) => ev.stopPropagation()}
+                      >
+                        Comprar entradas
+                      </a>
+                    </div>
+                  )}
                 </div>
               </article>
             );

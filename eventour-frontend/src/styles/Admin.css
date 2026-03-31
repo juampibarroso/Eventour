@@ -83,6 +83,15 @@
   background-color: #a438c0;
 }
 
+.admin-field-hint {
+  margin-top: -0.5rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.88rem;
+  color: #c9b9d8;
+}
+
 .event-list {
   background-color: #2c2c2c;
   padding: 2rem;
@@ -174,6 +183,28 @@
   font-style: italic;
   text-align: center;
   margin-top: 1rem;
+}
+
+.event-card-links {
+  margin-top: 12px;
+}
+
+.admin-ticket-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(219, 73, 251, 0.35);
+  background: rgba(219, 73, 251, 0.12);
+  color: #f6e9ff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-ticket-link:hover {
+  background: rgba(219, 73, 251, 0.2);
 }
 /* LoginAdmin styles */
 .login-wrapper {

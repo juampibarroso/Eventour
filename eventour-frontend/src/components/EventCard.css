@@ -32,6 +32,20 @@
 .event-info p {
   margin: 0.5rem 0;
 }
+
+.event-ticket-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(219, 73, 251, 0.35);
+  background: rgba(219, 73, 251, 0.12);
+  color: #f6e9ff;
+  font-weight: 700;
+  text-decoration: none;
+}
 .event-title-link {
   color: #ffffff;
   text-decoration: none;

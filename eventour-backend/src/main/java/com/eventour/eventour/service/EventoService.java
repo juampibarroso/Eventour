@@ -6,14 +6,13 @@ import com.eventour.eventour.model.Ubicacion;
 import com.eventour.eventour.repository.BlogSpotRepository;
 import com.eventour.eventour.repository.EventoRepository;
 import com.eventour.eventour.repository.UbicacionRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class EventoService {
@@ -31,14 +30,19 @@ public class EventoService {
 
     }
     public Evento obtenerEventoPorId(Long eventoId){
-        return  eventoRepository.findById(eventoId)
+        Evento evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new RuntimeException("Evento no encontrado por ID: "+ eventoId));
+        if (esObsoleto(evento)) {
+            eliminarEvento(evento.getId());
+            throw new RuntimeException("Evento no encontrado por ID: " + eventoId);
+        }
+        return evento;
 
     }
 
     public List<EventoDTO> buscarEventosPorNombre(String titulo) {
         List<Evento> eventos = eventoRepository.findByTituloContainingIgnoreCase(titulo);
-        return eventos.stream().map(this::mapToDTO).toList();
+        return eventos.stream().filter(this::esVisible).map(this::mapToDTO).toList();
     }
 
 
@@ -46,24 +50,25 @@ public class EventoService {
         List<Evento> eventos = eventoRepository.findAll();
         // Mapear cada Evento a EventoDTO
         return eventos.stream()
+                .filter(this::esVisible)
                 .map(this::mapToDTO)
                 .toList();
     }
 
     public List<Evento> filtrarPorCategoria(String categoria) {
-        return eventoRepository.findByCategoria(categoria);
+        return eventoRepository.findByCategoria(categoria).stream().filter(this::esVisible).toList();
     }
 
     public List<Evento> filtrarPorFechas(LocalDate fechaInicio, LocalDate fechaFin) {
-        return eventoRepository.findByFechas(fechaInicio, fechaFin);
+        return eventoRepository.findByFechas(fechaInicio, fechaFin).stream().filter(this::esVisible).toList();
     }
 
     public List<Evento> filtrarPorUbicacion(Long ubicacionId) {
-        return eventoRepository.findByUbicacion(ubicacionId);
+        return eventoRepository.findByUbicacion(ubicacionId).stream().filter(this::esVisible).toList();
     }
 
     public List<Evento> filtrarEventos(String categoria, LocalDate fechaInicio, LocalDate fechaFin, Long ubicacionId) {
-        return eventoRepository.findByFiltros(categoria, fechaInicio, fechaFin, ubicacionId);
+        return eventoRepository.findByFiltros(categoria, fechaInicio, fechaFin, ubicacionId).stream().filter(this::esVisible).toList();
     }
 
     public Evento crearEvento(EventoDTO eventoDTO){
@@ -79,12 +84,13 @@ public class EventoService {
                 eventoDTO.fechaInicio(),
                 eventoDTO.fechaFin(),
                 eventoDTO.precio(),
+                normalizarLink(eventoDTO.linkEntradas()),
                 eventoDTO.imagen(),
                 eventoDTO.estado(),
                 ubicacion,
                 eventoDTO.categoriaEvento()
         );
-    evento.setDestacado(eventoDTO.destacado());
+        evento.setDestacado(eventoDTO.destacado());
         return eventoRepository.save(evento);
     }
 
@@ -97,6 +103,7 @@ public class EventoService {
         evento.setFechaInicio(eventoDTO.fechaInicio());
         evento.setFechaFin(eventoDTO.fechaFin());
         evento.setPrecio(eventoDTO.precio());
+        evento.setLinkEntradas(normalizarLink(eventoDTO.linkEntradas()));
         evento.setImagen(eventoDTO.imagen());
         evento.setEstado(eventoDTO.estado());
         evento.setDestacado(eventoDTO.destacado());
@@ -123,7 +130,7 @@ public class EventoService {
 
     public List<EventoDTO> obtenerEventosDestacados() {
         List<Evento> eventos = eventoRepository.findByDestacadoTrue();
-        return eventos.stream().map(this::mapToDTO).toList();
+        return eventos.stream().filter(this::esVisible).map(this::mapToDTO).toList();
     }
 
 
@@ -140,6 +147,13 @@ public class EventoService {
         if (eventoDTO.precio() == null || eventoDTO.precio().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("El precio debe ser mayor o igual a 0");
         }
+        if (eventoDTO.linkEntradas() != null && !eventoDTO.linkEntradas().isBlank()) {
+            try {
+                URI.create(normalizarLink(eventoDTO.linkEntradas()));
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("El link de entradas debe ser una URL válida");
+            }
+        }
     }
 
     private EventoDTO mapToDTO(Evento evento) {
@@ -150,6 +164,7 @@ public class EventoService {
                 evento.getFechaInicio(),
                 evento.getFechaFin(),
                 evento.getPrecio(),
+                evento.getLinkEntradas(),
                 evento.getImagen(),
                 evento.getEstado(),
                 Long.valueOf(evento.getUbicacion().getId()),
@@ -158,20 +173,68 @@ public class EventoService {
         );
     }
 
+    private String normalizarLink(String rawLink) {
+        if (rawLink == null) {
+            return null;
+        }
+
+        String link = rawLink.trim();
+        if (link.isEmpty()) {
+            return null;
+        }
+
+        if (!link.startsWith("http://") && !link.startsWith("https://")) {
+            return "https://" + link;
+        }
+
+        return link;
+    }
+
     public EventoDTO obtenerEventoPorIdDTO(Long id) {
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Evento no encontrado con ID: " + id));
+        if (esObsoleto(evento)) {
+            eliminarEvento(evento.getId());
+            throw new RuntimeException("Evento no encontrado con ID: " + id);
+        }
         return mapToDTO(evento);
     }
 
     // Filtrar eventos con DTO
     public List<EventoDTO> filtrarEventosDTO(String categoria, LocalDate fechaInicio, LocalDate fechaFin, Long ubicacionId) {
         List<Evento> eventos = eventoRepository.findByFiltros(categoria, fechaInicio, fechaFin, ubicacionId);
-        return eventos.stream().map(this::mapToDTO).toList();
+        return eventos.stream().filter(this::esVisible).map(this::mapToDTO).toList();
     }
 
     public List<Evento> buscarEventosEntreFechas(LocalDate fechaInicio, LocalDate fechaFin) {
-        return eventoRepository.findByFechaInicioBetween(fechaInicio, fechaFin);
+        return eventoRepository.findByFechaInicioBetween(fechaInicio, fechaFin).stream().filter(this::esVisible).toList();
+    }
+
+    @Scheduled(cron = "0 0 4 * * *")
+    public void eliminarEventosObsoletosProgramado() {
+        purgeObsoleteEvents();
+    }
+
+    public int purgeObsoleteEvents() {
+        LocalDate cutoff = LocalDate.now().minusDays(7);
+        List<Evento> obsoletos = eventoRepository.findObsoletosAntesDe(cutoff);
+        obsoletos.forEach((evento) -> {
+            blogSpotRepository.deleteByEventoId(evento.getId());
+            eventoRepository.deleteById(evento.getId());
+        });
+        return obsoletos.size();
+    }
+
+    private boolean esVisible(Evento evento) {
+        return !esObsoleto(evento);
+    }
+
+    private boolean esObsoleto(Evento evento) {
+        LocalDate fechaBase = evento.getFechaFin() != null ? evento.getFechaFin() : evento.getFechaInicio();
+        if (fechaBase == null) {
+            return false;
+        }
+        LocalDate cutoff = LocalDate.now().minusDays(7);
+        return fechaBase.isBefore(cutoff);
     }
 }
-

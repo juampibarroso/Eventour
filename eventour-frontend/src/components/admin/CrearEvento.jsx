@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
-
-const API = import.meta.env.VITE_API_URL;
+import { normalizeTicketUrl } from "../../lib/eventDisplay";
+import { API_BASE } from "../../lib/api";
 
 const toISO = (v) => {
   if (!v) return "";
@@ -22,7 +22,7 @@ const CrearEvento = () => {
     categoriaId: "",
     ubicacionId: "",
     imagenUrl: "",
-    precio: "",
+    linkEntradas: "",
     destacado: false,
   });
   const [mensaje, setMensaje] = useState("");
@@ -30,6 +30,13 @@ const CrearEvento = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+  };
+
+  const handleTicketBlur = () => {
+    setForm((prev) => {
+      const normalized = normalizeTicketUrl(prev.linkEntradas);
+      return normalized ? { ...prev, linkEntradas: normalized } : prev;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -44,11 +51,12 @@ const CrearEvento = () => {
         categoriaId: toNum(form.categoriaId),
         ubicacionId: toNum(form.ubicacionId),
         imagenUrl: form.imagenUrl?.trim() || null,
-        precio: toNum(form.precio),
+        precio: 0,
+        linkEntradas: normalizeTicketUrl(form.linkEntradas) || null,
         destacado: !!form.destacado,
       };
 
-      const res = await axios.post(`${API}/eventos`, dto, {
+      const res = await axios.post(`${API_BASE}/eventos`, dto, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -65,7 +73,7 @@ const CrearEvento = () => {
           categoriaId: "",
           ubicacionId: "",
           imagenUrl: "",
-          precio: "",
+          linkEntradas: "",
           destacado: false,
         });
       } else {
@@ -86,10 +94,10 @@ const CrearEvento = () => {
       <h2>Crear Evento (simple)</h2>
       <form onSubmit={handleSubmit}>
         <input type="text" name="titulo" placeholder="Título" value={form.titulo} onChange={handleChange} required />
-        <textarea name="descripcion" placeholder="Descripción" value={form.descripcion} onChange={handleChange} />
+        <textarea name="descripcion" placeholder="Descripción completa" value={form.descripcion} onChange={handleChange} rows={8} />
         <input type="date" name="fechaInicio" value={form.fechaInicio} onChange={handleChange} required />
         <input type="date" name="fechaFin" value={form.fechaFin} onChange={handleChange} />
-        <input type="number" name="precio" placeholder="Precio" value={form.precio} onChange={handleChange} />
+        <input type="text" name="linkEntradas" placeholder="Link de entradas" value={form.linkEntradas} onChange={handleChange} onBlur={handleTicketBlur} />
         <input type="text" name="imagenUrl" placeholder="URL de imagen" value={form.imagenUrl} onChange={handleChange} />
         <input type="number" name="categoriaId" placeholder="ID de categoría" value={form.categoriaId} onChange={handleChange} required />
         <input type="number" name="ubicacionId" placeholder="ID de ubicación (opcional)" value={form.ubicacionId} onChange={handleChange} />

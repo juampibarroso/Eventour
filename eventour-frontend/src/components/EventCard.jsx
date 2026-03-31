@@ -1,7 +1,7 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_LIBRARIES } from "../config/googleMapsConfig";
+import { formatDisplayDate, getTicketUrl } from "../lib/eventDisplay";
 import "./EventCard.css";
 
 const mapContainerStyle = {
@@ -17,6 +17,7 @@ function EventCard({ event }) {
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: GOOGLE_MAPS_LIBRARIES,
   });
+  const ticketUrl = getTicketUrl(event);
 
   return (
     <div className="event-card">
@@ -31,9 +32,20 @@ function EventCard({ event }) {
           <h3>{event.titulo}</h3>
         </Link>
         <p>{event.descripcion}</p>
-        <p><strong>📅 Fecha:</strong> {event.fechaInicio} — {event.fechaFin}</p>
-        <p><strong>💸 Precio:</strong> ${event.precio}</p>
-        <p><strong>🎭 Categoría:</strong> {event.categoriaEvento}</p>
+        <p><strong>📅 Fecha:</strong> {formatDisplayDate(event.fechaInicio)}</p>
+        {ticketUrl && (
+          <p>
+            <a
+              className="event-ticket-link"
+              href={ticketUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Comprar entradas
+            </a>
+          </p>
+        )}
+        <p><strong>🎭 Categoría:</strong> {event.categoriaEvento ?? event.categoria}</p>
         {event.estado && <p><strong>📌 Estado:</strong> {event.estado}</p>}
         {event.ubicacion?.nombre && (
           <p><strong>📍 Lugar:</strong> {event.ubicacion.nombre}</p>

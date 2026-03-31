@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
+import { API_BASE } from "../../lib/api";
 
 const CrearAdmin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
-  const API = import.meta.env.VITE_API_URL;
-
   const handleCrearAdmin = async (e) => {
     e.preventDefault();
 
@@ -14,7 +13,7 @@ const CrearAdmin = () => {
 
     try {
       const response = await axios.post(
-        `${API}/usuarios/crearAdmin`,
+        `${API_BASE}/usuarios/crearAdmin`,
         { username, password },
         {
           headers: {
