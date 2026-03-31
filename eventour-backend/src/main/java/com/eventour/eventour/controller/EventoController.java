@@ -7,6 +7,7 @@ import com.eventour.eventour.service.EventoService;
 import com.eventour.eventour.service.UbicacionService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,13 +41,13 @@ public class EventoController {
         return ResponseEntity.ok(evento);
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Evento> crearEvento(@RequestBody EventoDTO eventoDTO){
         Evento nuevoEvento= eventoService.crearEvento(eventoDTO);
         return ResponseEntity.ok(nuevoEvento);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Evento> actualizarEvento(@PathVariable Long id, @RequestBody EventoDTO eventoDTO) {
         return ResponseEntity.ok(eventoService.actualizarEvento(id, eventoDTO));
     }
